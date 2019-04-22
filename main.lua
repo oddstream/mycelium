@@ -20,6 +20,9 @@ native.setProperty('windowTitleText', 'FILIGREE') -- Win32
 
 math.randomseed(os.time())
 
+-- our one global, an object containing useful precalculated dimensions
+dim = {}
+
 -- for k,v in pairs( _G ) do
 --   print( k , v )
 -- end
@@ -46,5 +49,17 @@ if not table.shuffle then
   end
 end
 print('table shuffle', type(table.shuffle))
+
+if not table.find then
+  function table.find(tbl, fn)
+    for _,v in ipairs(tbl) do
+      if fn(v) then
+        return v
+      end
+    end
+    return nil
+  end
+end
+print('table find', type(table.find))
 
 composer.gotoScene('Splash')

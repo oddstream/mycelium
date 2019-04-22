@@ -1,13 +1,36 @@
 -- Cell class
 
+local bit = require('plugin.bit')
+
+local Dim = require 'Dim'
+
+local PLACE_COIN_CHANCE = 0.5
+
+local function hammingWeight(coin)
+  local w = 0
+  for dir = 1, 6 do
+    if bit.band(coin, 1) == 1 then
+      w = w + 1
+    end
+    coin = bit.rshift(coin, 1)
+  end
+  return w
+end
+
 Cell = {
   -- prototype object
   grid = nil,      -- grid we belong to
   x = nil,        -- column 1 .. width
   y = nil,        -- row 1 .. height
   center = nil,   -- point table, screen coords
-  edges = nil,    -- array of Edge objects
-  hexagon = nil,     -- ShapeObject
+
+  ne, e, se, sw, w, nw = nil, nil, nil, nil, nil, nil,
+  coins = 0,
+
+  color = nil,  -- e.g. {0,1,0}
+  hexagon = nil,     -- ShapeObject for outline
+
+  grp = nil,  -- group to put shapes in
 }
 
 function Cell:new(grid, x, y)
@@ -23,153 +46,132 @@ function Cell:new(grid, x, y)
   -- odd-r horizontal layout shoves odd rows half a hexagon width to the right
   -- no '&'' operator in Lua 5.1, hence math.fmod(y,2) == 1
 
-  o.center = {x=(x*grid.w) + (grid.w/2), y=(y * grid.h75) + (grid.h/2) - grid.h + 120}
+  -- o.center = {x=(x*grid.w) + (grid.w/2), y=(y * grid.h75) + (grid.h/2) - grid.h + 120}
+  o.center = {x=(x*dim.W)-(dim.W), y=(y*dim.H75)}
   if math.fmod(y,2) == 1 then
-    o.center.x = o.center.x + grid.w/2
+    o.center.x = o.center.x + dim.W50
   end
 
-  o.edges = {}
-  for dir = 1, 6 do
-    o.edges[dir] = Edge:new(dir)
-  end
+  -- "These coordinates will automatically be re-centered about the center of the polygon."
+  local v = { -- vertices
+    0,-(dim.H50),  -- N 1,2
+    dim.W50,-(dim.H25), -- NE 3,4
+    dim.W50,dim.H25,    -- SE 5,6
+    0,dim.H50,    -- S 7,8
+    -(dim.W50),dim.H25, -- SW 9,10
+    -(dim.W50),-(dim.H25),  -- NW 11,12
+  }
+  o.hexagon = display.newPolygon(o.grid.gridGroup, o.center.x, o.center.y, v)
+  o.hexagon:setFillColor(0,0,0)
+  o.hexagon:setStrokeColor(0.2)
+  o.hexagon.strokeWidth = 2
+
+  o.hexagon:addEventListener('tap', o) -- table listener
 
   return o
 end
 
-function Cell:neighbour(dir)
-  if dir == nil or dir == 0 then
-    return self
+function Cell:shiftBits()
+  if bit.band(self.coins, dim.NORTHWEST) == dim.NORTHWEST then
+    -- high bit is set
+    self.coins = bit.lshift(self.coins, 1)
+    self.coins = bit.band(self.coins, dim.MASK)
+    self.coins = bit.bor(self.coins, 1)
   else
-    return self.edges[dir].cell
+    self.coins = bit.lshift(self.coins, 1)
   end
 end
 
-function Cell:id()
-  return self.x .. ',' .. self.y
+function Cell:unshiftBits()
 end
 
-function Cell:neighbourId(dir)
-  local d = {'NE','E','SE','SW','W','NW'}
-  if self:neighbour(dir) then
-    return d[dir] .. '=' .. self:neighbour(dir):id()
-  else
-    return d[dir] .. '=nil'
+function Cell:isComplete()
+  return false
+end
+
+function Cell:placeCoin()
+  assert(dim)
+  assert(dim.EAST)
+  if self.e then
+    if math.random() < PLACE_COIN_CHANCE then
+      self.coins = bit.bor(self.coins, dim.EAST)
+      self.e.coins = bit.bor(self.e.coins, dim.WEST)
+    end
+  end
+  if self.ne then
+    if math.random() < PLACE_COIN_CHANCE then
+      self.coins = bit.bor(self.coins, dim.NORTHEAST)
+      self.ne.coins = bit.bor(self.ne.coins, dim.SOUTHWEST)
+    end
+  end
+  if self.se then
+    if math.random() < PLACE_COIN_CHANCE then
+      self.coins = bit.bor(self.coins, dim.SOUTHEAST)
+      self.se.coins = bit.bor(self.se.coins, dim.NORTHWEST)
+    end
   end
 end
 
-function Cell:setNeighbour(dir, cell)
-  assert(dir)
-  assert(cell)
-  assert(self)
-  assert(self.edges)
-  assert(self.edges[dir])
-  self.edges[dir].cell = cell
+function Cell:jumbleCoin()
+end
+
+function Cell:colorComplete()
+end
+
+function Cell:setGraphic()
 end
 
 function Cell:tap(event)
   -- implement table listener for tap events
-  puck:setDestination(self)
-end
-
-function Cell:markHexagon()
-  self.hexagon:setFillColor(0,0,0.3)
-end
-
-function Cell:unmarkHexagon()
-  self.hexagon:setFillColor(0,0,0.2)
+  print('tap', self.x, self.y, self.coins, hammingWeight(self.coins))
+  if self.grp then
+    self:shiftBits()
+    self:createGraphics()
+  end
 end
 
 function Cell:createGraphics()
 
-  local w = self.grid.w
-  local h = self.grid.h
-
-  -- "These coordinates will automatically be re-centered about the center of the polygon."
-  local v = { -- vertices
-    0,-(h/2),  -- N 1,2
-    w/2,-(h/4), -- NE 3,4
-    w/2,h/4,    -- SE 5,6
-    0,h/2,    -- S 7,8
-    -(w/2),h/4, -- SW 9,10
-    -(w/2),-(h/4),  -- NW 11,12
-  }
-  self.hexagon = display.newPolygon(self.grid.mazeGroup, self.center.x, self.center.y, v)
-  self.hexagon:setFillColor(0,0,0.2)
-  self.hexagon:addEventListener('tap', self) -- table listener
-
-  local lines = {
-    {v[1],v[2], v[3],v[4]},
-    {v[3],v[4], v[5],v[6]},
-    {v[5],v[6], v[7],v[8]},
-    {v[7],v[8], v[9],v[10]},
-    {v[9],v[10], v[11],v[12]},
-    {v[11],v[12], v[1],v[2]}
-  }
-  for dir = 1, 6 do
-    local ed = self.edges[dir]
-    local doLine = ed.wall
-
-    for dir2 = 1, 3 do
-      if dir == dir2 and self:neighbour(dir2) then
-        doLine = false
-      end
-    end
-
-    if doLine then
-      local x1,y1,  x2,y2 = unpack(lines[dir])
-      x1 = x1 + self.center.x
-      y1 = y1 + self.center.y
-      x2 = x2 + self.center.x
-      y2 = y2 + self.center.y
-      ed.line = display.newLine(self.grid.mazeGroup, x1, y1, x2, y2)
-      ed.line.strokeWidth = 2
-      ed.line:setStrokeColor(0,0,1)
-    end
+  if self.grp then
+    self.grp:removeSelf()
+    self.grp = nil
   end
-end
 
-function Cell:getNeighbours1()
-  local arr = {}
-  for dir = 1, 6 do
-    if not self:isWall(dir) then
-      table.insert(arr, self:neighbour(dir))
-    end
-  end
-  return arr
-end
+  self.grp = display.newGroup()
+  self.grid.shapesGroup:insert(self.grp)
 
-function Cell:getNeighbours2()
-  local arr1 = self:getNeighbours1()
-  local arr2 = {}
-  for _,t in ipairs(arr1) do
-    for dir = 1, 6 do
-      if not t:isWall(dir) then
-        local n = t:neighbour(dir)
-        if not table.contains(arr2, n) then
-          table.insert(arr2, n)
-        end
+  if hammingWeight(self.coins) == 1 then
+    local cd = table.find(dim.cellData, function(b) return self.coins == b.bit end)
+    assert(cd)
+    local line = display.newLine(self.grp,
+      self.center.x,
+      self.center.y, 
+      self.center.x + cd.c2eX,
+      self.center.y + cd.c2eY)
+    line.strokeWidth = dim.Q10
+
+    local circle = display.newCircle(self.grp, self.center.x, self.center.y, dim.Q33)
+    circle.strokeWidth = dim.Q10
+    circle:setFillColor(0,0,0)
+  else
+    -- until Bezier curves, just draw a line from coin-bit-edge to center
+    for _,cd in ipairs(dim.cellData) do
+      if bit.band(cd.bit, self.coins) == cd.bit then
+        local line = display.newLine(self.grp,
+        self.center.x,
+        self.center.y, 
+        self.center.x + cd.c2eX,
+        self.center.y + cd.c2eY)
+        line.strokeWidth = dim.Q10
       end
     end
   end
-  return arr2
 end
 
 --[[
 function Cell:destroy()
   self.grid = nil
-  -- self.edges = nil
-  self.parent = nil
-  -- for dir = 1, 6 do
-  --   self.edges[dir]:destroy()
-  -- end
-  -- if self.rect then
-  --   self.rect:removeSelf()
-  --   self.rect = nil
-  -- end
-  if self.dot then
-    self.dot:removeSelf()
-    self.dot = nil
-  end
+  -- TODO
 end
 ]]
 

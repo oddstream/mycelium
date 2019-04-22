@@ -1,0 +1,75 @@
+-- Dim.lua
+
+Dim = {
+  Q = nil,
+
+  W = nil,
+  W75 = nil,
+  W50 = nil,
+  W25 = nil,
+
+  H = nil,
+  H75 = nil,
+  H50 = nil,
+  H25 = nil,
+
+  Q33 = nil,
+  Q10 = nil,
+
+  X60 = nil,
+  Y60 = nil,
+
+  NORTHEAST = 1,
+  EAST = 2,
+  SOUTHEAST = 4,
+  SOUTHWEST = 8,
+  WEST = 16,
+  NORTHWEST = 32,
+  
+  MASK = 63,
+
+  cellData = nil,
+}
+
+-- https://www.redblobgames.com/grids/hexagons/
+-- when packed, 2 hex occupy 1.5 wide, not 2
+-- and in pointy top, 2 vertical occupy 1.75, not 2
+
+function Dim:new(Q)
+  local o = {}
+  self.__index = self
+  setmetatable(o, self)
+
+  o.Q = Q
+
+  o.W = math.floor(math.sqrt(3)*Q)
+  o.W75 = math.floor(o.W*0.75)
+  o.W50 = math.floor(o.W*0.5)
+  o.W25 = math.floor(o.W*0.25)
+  
+  o.H = 2 * Q
+  o.H75 = math.floor(o.H*0.75)
+  o.H50 = math.floor(o.H*0.5)
+  o.H25 = math.floor(o.H*0.25)
+  
+  o.Q33 = math.floor(Q/3.333333)
+  o.Q10 = math.floor(Q/10)
+  
+  -- https://gamedev.stackexchange.com/questions/18340/get-position-of-point-on-circumference-of-circle-given-an-angle
+  local apothem = Q * math.cos(30 * math.pi / 180)  --  0.86602529158357
+  o.X60 = math.cos(60 * math.pi / 180) * apothem
+  o.Y60 = math.sin(60 * math.pi / 180) * apothem
+  
+  o.cellData = {
+    { bit=o.NORTHEAST,  oppBit=o.SOUTHWEST, link='ne',    c2eX=o.X60,    c2eY=-o.Y60,  },
+    { bit=o.EAST,       oppBit=o.WEST,      link='w',     c2eX=o.W50,    c2eY=0,     },
+    { bit=o.SOUTHEAST,  oppBit=o.NORTHWEST, link='se',    c2eX=o.X60,    c2eY=o.Y60,   },
+    { bit=o.SOUTHWEST,  oppBit=o.NORTHEAST, link='sw',    c2eX=-o.X60,   c2eY=o.Y60,   },
+    { bit=o.WEST,       oppBit=o.EAST,      link='w',     c2eX=-o.W50,   c2eY=0,     },
+    { bit=o.NORTHWEST,  oppBit=o.SOUTHEAST, link='nw',    c2eX=-o.X60,   c2eY=-o.Y60,  }
+  }
+
+  return o
+end
+
+return Dim

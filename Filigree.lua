@@ -20,11 +20,11 @@ function scene:create(event)
   local numY = 8
 
   dim = Dim:new( math.floor(display.viewableContentWidth/numX/1.5) )
-  assert(dim)
   
   local grid = Grid:new(gridGroup, shapesGroup, numX, numY)
   grid:linkCells()
   grid:placeCoins()
+  grid:colorCoins()
   grid:createGraphics()
 end
 

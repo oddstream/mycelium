@@ -29,6 +29,7 @@ Dim = {
   MASK = 63,
 
   cellData = nil,
+  vertices = nil,
 }
 
 -- https://www.redblobgames.com/grids/hexagons/
@@ -57,16 +58,25 @@ function Dim:new(Q)
   
   -- https://gamedev.stackexchange.com/questions/18340/get-position-of-point-on-circumference-of-circle-given-an-angle
   local apothem = Q * math.cos(30 * math.pi / 180)  --  0.86602529158357
-  o.X60 = math.cos(60 * math.pi / 180) * apothem
-  o.Y60 = math.sin(60 * math.pi / 180) * apothem
+  o.X60 = math.floor(math.cos(60 * math.pi / 180) * apothem)
+  o.Y60 = math.floor(math.sin(60 * math.pi / 180) * apothem)
   
   o.cellData = {
-    { bit=o.NORTHEAST,  oppBit=o.SOUTHWEST, link='ne',    c2eX=o.X60,    c2eY=-o.Y60,  },
-    { bit=o.EAST,       oppBit=o.WEST,      link='w',     c2eX=o.W50,    c2eY=0,     },
-    { bit=o.SOUTHEAST,  oppBit=o.NORTHWEST, link='se',    c2eX=o.X60,    c2eY=o.Y60,   },
-    { bit=o.SOUTHWEST,  oppBit=o.NORTHEAST, link='sw',    c2eX=-o.X60,   c2eY=o.Y60,   },
-    { bit=o.WEST,       oppBit=o.EAST,      link='w',     c2eX=-o.W50,   c2eY=0,     },
-    { bit=o.NORTHWEST,  oppBit=o.SOUTHEAST, link='nw',    c2eX=-o.X60,   c2eY=-o.Y60,  }
+    { bit=o.NORTHEAST,  oppBit=o.SOUTHWEST, link='ne',    c2eX=o.X60,    c2eY=-o.Y60, },
+    { bit=o.EAST,       oppBit=o.WEST,      link='e',     c2eX=o.W50,    c2eY=0,      },
+    { bit=o.SOUTHEAST,  oppBit=o.NORTHWEST, link='se',    c2eX=o.X60,    c2eY=o.Y60,  },
+    { bit=o.SOUTHWEST,  oppBit=o.NORTHEAST, link='sw',    c2eX=-o.X60,   c2eY=o.Y60,  },
+    { bit=o.WEST,       oppBit=o.EAST,      link='w',     c2eX=-o.W50,   c2eY=0,      },
+    { bit=o.NORTHWEST,  oppBit=o.SOUTHEAST, link='nw',    c2eX=-o.X60,   c2eY=-o.Y60, }
+  }
+
+  o.vertices = {
+    0,-(o.H50),  -- N 1,2
+    o.W50,-(o.H25), -- NE 3,4
+    o.W50,o.H25,    -- SE 5,6
+    0,o.H50,    -- S 7,8
+    -(o.W50),o.H25, -- SW 9,10
+    -(o.W50),-(o.H25),  -- NW 11,12
   }
 
   return o

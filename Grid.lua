@@ -92,6 +92,23 @@ function Grid:placeCoins()
 end
 
 function Grid:colorCoins()
+  local colors = {
+    {0,0.2,0},
+    {0,0.4,0},
+    {0,0.6,0},
+    {0.5,0.5,0},
+    {0.5,0.5,0.5},
+  }
+  local nColor = 1
+  local c = table.find(self.cells, function(d) return d.coins ~= 0 and d.color == nil end)
+  while c do
+    c:colorConnected(colors[nColor])
+    nColor = nColor + 1
+    if nColor > #colors then
+      nColor = 1
+    end
+    c = table.find(self.cells, function(d) return d.coins ~= 0 and d.color == nil end)
+  end
 end
 
 function Grid:jumbleCoins()
@@ -103,10 +120,16 @@ function Grid:setGraphics()
 end
 
 function Grid:isComplete()
-  return false
+  for n = 1, #self.cells do
+    if not self.cells[n]:isComplete() then
+      return false
+    end
+  end
+  return true
 end
 
 function Grid:colorAll()
+  self:iterator( function(c) c:setColor({1,1,1}) end )
 end
 
 --[[

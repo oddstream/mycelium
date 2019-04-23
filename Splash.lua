@@ -31,7 +31,7 @@ function scene:show(event)
 
   elseif phase == 'did' then
     -- Code here runs when the scene is entirely on screen
-    tim = timer.performWithDelay(500, function() composer.gotoScene('Filigree', {effect='fade'}) end, 1)
+    tim = timer.performWithDelay(1000, function() composer.gotoScene('Filigree', {effect='fade'}) end, 1)
   end
 end
 

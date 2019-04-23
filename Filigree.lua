@@ -16,15 +16,27 @@ function scene:create(event)
   local shapesGroup = display.newGroup()
   sceneGroup:insert(shapesGroup)
 
-  local numX = 5
-  local numY = 8
+  -- local numX = 5
+  -- local numY = 10
+  local numX = 6
+  local numY = 12
+  -- local numX = 10
+  -- local numY = 20
 
-  dim = Dim:new( math.floor(display.viewableContentWidth/numX/1.5) )
-  
+  -- each cell is Q * math.sqrt(3) wide
+  -- we need space for numX + a half
+  dimensions = Dim:new( math.floor(display.viewableContentWidth/(numX+0.5)/math.sqrt(3)) )
+  -- get 2 vertical cells in cell height * 1.75
+  -- numY = math.floor(display.viewableContentHeight / dim.H * (1.75/2) )
+
+  -- for debugging the gaps between hexagons problem
+  -- display.setDefault('background', 0.5,0.5,0.5)
+
   local grid = Grid:new(gridGroup, shapesGroup, numX, numY)
   grid:linkCells()
   grid:placeCoins()
   grid:colorCoins()
+  grid:jumbleCoins()
   grid:createGraphics()
 end
 

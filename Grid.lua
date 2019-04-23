@@ -1,5 +1,7 @@
 -- Grid (of cells) class
 
+local composer = require('composer')
+
 Grid = {
   -- prototype object
   gridGroup = nil,
@@ -7,6 +9,8 @@ Grid = {
   cells = nil,    -- array of Cell objects
   width = nil,      -- number of columns
   height = nil,      -- number of rows
+
+  dingSound = nil,
 }
 
 function Grid:new(gridGroup, shapesGroup, width, height)
@@ -28,16 +32,42 @@ function Grid:new(gridGroup, shapesGroup, width, height)
     end
   end
 
+  o.dingSound = audio.loadSound('complete.wav')
+
   return o
 end
 
 function Grid:reset()
+  -- clear out the Cells
   self:iterator(function(c)
     c:reset()
   end)
+
+  do
+    local last_using = composer.getVariable('last_using')
+    if not last_using then
+      last_using = 0
+    end
+    local before = collectgarbage('count')
+    collectgarbage('collect')
+    local after = collectgarbage('count')
+    print('collected', math.round(before - after), 'KBytes, using', math.round(after), 'KBytes', 'leaked', after-last_using)
+    composer.setVariable('last_using', after)
+  end
+
+  self:placeCoins()
+  self:colorCoins()
+  self:jumbleCoins()
+  self:createGraphics()
+end
+
+function Grid:ding()
+  audio.play(self.dingSound)
 end
 
 function Grid:linkCells()
+  local dim = dimensions
+
   -- print('linking', #self.cells, 'cells')
   local links = 0
   for _,c in ipairs(self.cells) do
@@ -64,7 +94,7 @@ function Grid:linkCells()
       fc.ne = c
     end
   end
-  print(links, 'links made')
+  -- print(links, 'links made')
 end
 
 function Grid:iterator(fn)
@@ -75,7 +105,7 @@ end
 
 function Grid:findCell(x,y)
   local c = table.find(self.cells, function(d) return d.x == x and d.y == y end)
-  if not c then print('cannot find', x, y) end
+  if not c then print('*** cannot find', x, y) end
   return c
 end
 
@@ -88,17 +118,81 @@ function Grid:createGraphics()
 end
 
 function Grid:placeCoins()
+  local dim = dimensions
+
   self:iterator(function(c) c:placeCoin() end)
+--[[
+  local yS = self.height
+  for yN = 1, self.height/2 do
+    for x = 1, self.width do
+      local cN = self:findCell(x,yN)
+      local cS = self:findCell(x,yS)
+      cN:placeCoin(cS)
+      -- cN:placeCoin()
+    end
+    yS = yS - 1
+  end
+  ]]
 end
+--[[
+function Grid:placeCircle(x,y)
+  local dim = dimensions
+
+  local path = {
+    {link='ne', bit=dim.SOUTHEAST},
+    {link='se', bit=dim.SOUTHWEST},
+    {link='sw', bit=dim.WEST},
+    {link='w', bit=dim.NORTHEAST},
+    {link='ne', bit=dim.EAST},
+  }
+  local c = self:findCell(x,y)
+  for i=1, #path do
+    c = c[path[i].link]
+    c.coins = bit.bor(c.coins, path[i].bit)
+  end
+
+end
+]]
 
 function Grid:colorCoins()
-  local colors = {
-    {0,0.2,0},
-    {0,0.4,0},
-    {0,0.6,0},
-    {0.5,0.5,0},
-    {0.5,0.5,0.5},
+  -- https://en.wikipedia.org/wiki/Web_colors
+  local colorsGreen = {
+    {0,100,0},  -- DarkGreen
+    {107,142,35},  -- OliveDrab
+    {139,69,19},  -- SaddleBrown
+    {0,64,0},
+    {80,80,0},  -- Olive
+    {154,205,50},  -- YellowGreen
+    {46,139,87} -- SeaGreen
   }
+  --[[
+  local colorsPink = {
+    {199,21,133},
+    {219,112,147},
+    {255,20,147},
+    {255,105,180},
+    {255,192,203},
+  }
+  ]]
+  local colorsBlue = {
+    {25,25,112},
+    {0,0,205},
+    {65,105,225},
+    {30,144,255},
+    {135,206,250},
+    {176,196,222},
+  }
+  local colorsAll = {
+    colorsGreen,
+    colorsBlue,
+  }
+  local colors = colorsAll[math.random(#colorsAll)]
+  for _,row in ipairs(colors) do
+    for i = 1,3 do
+      row[i] = row[i] * 4 / 1020
+    end
+  end
+
   local nColor = 1
   local c = table.find(self.cells, function(d) return d.coins ~= 0 and d.color == nil end)
   while c do
@@ -115,10 +209,6 @@ function Grid:jumbleCoins()
   self:iterator( function(c) c:jumbleCoin() end )
 end
 
-function Grid:setGraphics()
-  self:iterator( function(c) c:setGraphic() end )
-end
-
 function Grid:isComplete()
   for n = 1, #self.cells do
     if not self.cells[n]:isComplete() then
@@ -128,17 +218,8 @@ function Grid:isComplete()
   return true
 end
 
-function Grid:colorAll()
+function Grid:colorComplete()
   self:iterator( function(c) c:setColor({1,1,1}) end )
 end
-
---[[
-function Grid:destroy()
-  self:iterator(function(c) c:destroy() end)
-  self.gridGroup = nil
-  self.shapesGroup = nil
-  self.cells = nil
-end
-]]
 
 return Grid

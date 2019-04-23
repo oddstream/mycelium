@@ -21,7 +21,7 @@ native.setProperty('windowTitleText', 'FILIGREE') -- Win32
 math.randomseed(os.time())
 
 -- our one global, an object containing useful precalculated dimensions
-dim = {}
+dimensions = {}
 
 -- for k,v in pairs( _G ) do
 --   print( k , v )

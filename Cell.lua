@@ -5,7 +5,8 @@ local composer = require('composer')
 local bit = require('plugin.bit')
 local bezier = require('Bezier')
 
-local PLACE_COIN_CHANCE = 0.3333
+local PLACE_COIN_CHANCE = 0.3
+local SHOW_HEXAGON = true
 
 local function hammingWeight(coin)
   local w = 0
@@ -36,6 +37,8 @@ Cell = {
 }
 
 function Cell:new(grid, x, y)
+  local dim = dimensions
+
   local o = {}
   self.__index = self
   setmetatable(o, self)
@@ -53,19 +56,37 @@ function Cell:new(grid, x, y)
   if math.fmod(y,2) == 1 then
     o.center.x = o.center.x + dim.W50
   end
+  -- can't have the center being on the edge of the screen, it would clip left of first cell
+  o.center.x = o.center.x + dim.W50
 
   -- "These coordinates will automatically be re-centered about the center of the polygon."
   o.hexagon = display.newPolygon(o.grid.gridGroup, o.center.x, o.center.y, dim.vertices)
   o.hexagon:setFillColor(0,0,0)
-  o.hexagon:setStrokeColor(0.2)
-  o.hexagon.strokeWidth = 2
+  if SHOW_HEXAGON then
+    o.hexagon:setStrokeColor(0.1)
+    o.hexagon.strokeWidth = 2
+  end
 
   o.hexagon:addEventListener('tap', o) -- table listener
 
   return o
 end
 
+function Cell:reset()
+  self.coins = 0
+  self.color = nil
+  if self.grp then
+    self.grp:removeSelf()
+    self.grp = nil
+  end
+  if self.grpObjects then
+    self.grpObjects = nil
+  end
+end
+
 function Cell:shiftBits(num)
+  local dim = dimensions
+
   num = num or 1
   while num > 0 do
     if bit.band(self.coins, dim.NORTHWEST) == dim.NORTHWEST then
@@ -81,6 +102,8 @@ function Cell:shiftBits(num)
 end
 
 function Cell:isComplete()
+  local dim = dimensions
+
   for _, cd in ipairs(dim.cellData) do
     if bit.band(self.coins, cd.bit) == cd.bit then
       local cn = self[cd.link]
@@ -95,31 +118,41 @@ function Cell:isComplete()
   return true
 end
 
-function Cell:placeCoin()
-  if self.e then
+function Cell:placeCoin(mirror)
+  local dim = dimensions
+
+  for _,cd in ipairs(dim.cellData) do
     if math.random() < PLACE_COIN_CHANCE then
-      self.coins = bit.bor(self.coins, dim.EAST)
-      self.e.coins = bit.bor(self.e.coins, dim.WEST)
-    end
-  end
-  if self.ne then
-    if math.random() < PLACE_COIN_CHANCE then
-      self.coins = bit.bor(self.coins, dim.NORTHEAST)
-      self.ne.coins = bit.bor(self.ne.coins, dim.SOUTHWEST)
-    end
-  end
-  if self.se then
-    if math.random() < PLACE_COIN_CHANCE then
-      self.coins = bit.bor(self.coins, dim.SOUTHEAST)
-      self.se.coins = bit.bor(self.se.coins, dim.NORTHWEST)
+      if self[cd.link] then
+        self.coins = bit.bor(self.coins, cd.bit)
+        self[cd.link].coins = bit.bor(self[cd.link].coins, cd.oppBit)
+
+        if mirror then
+          local vcd = dim.cellData[cd.vsym]
+          assert(vcd)
+          assert(vcd.bit)
+          if not mirror[vcd.link] then
+          
+            print('origin', self.x, self.y, 'link', cd.link)
+            print('mirror', mirror.x, mirror.y, 'no link', vcd.link)
+            error()
+          end
+          mirror.coins = bit.bor(mirror.coins, vcd.bit)
+          mirror[vcd.link].coins = bit.bor(mirror[vcd.link].coins, vcd.oppBit)
+        end
+
+      end
     end
   end
 end
 
 function Cell:jumbleCoin()
+  self:shiftBits(math.random(5))
 end
 
 function Cell:colorConnected(color)
+  local dim = dimensions
+
   self.color = color
   for _, cd in ipairs(dim.cellData) do
     if bit.band(self.coins, cd.bit) == cd.bit then
@@ -141,31 +174,46 @@ function Cell:setColor(color)
 ]]
   if self.grpObjects then
     for _, o in ipairs(self.grpObjects) do
-      o:setStrokeColor(unpack(color))
+      if o.setStrokeColor then
+        o:setStrokeColor(unpack(color))
+      end
+      if o.setFillColor then
+        o:setFillColor(unpack(color))
+      end
     end
   end
 end
 
 function Cell:tap(event)
   -- implement table listener for tap events
-  print('tap', self.x, self.y, self.coins, hammingWeight(self.coins))
-  if self.grid:isComplete() then
-    composer.removeScene('Filigree')
-    composer.gotoScene('Filigree')
-    return
-  end
+  -- print('tap', self.x, self.y, self.coins, hammingWeight(self.coins))
 
-  if self.grp then
+  local function afterRotate()
     self:shiftBits()
     self:createGraphics()
-
     if self.grid:isComplete() then
-      self.grid:colorAll()
+      self.grid:ding()
+      self.grid:colorComplete()
     end
+  end
+
+  if self.grid:isComplete() then
+    self.grid:reset()
+  elseif self.grp then
+    -- self.grp.anchorChildren = true
+    -- self.grp.anchorX = 0
+    -- self.grp.anchorY = 0
+    transition.to(self.grp, {
+      time = 100,
+      rotation = 60,
+      onComplete = afterRotate,
+    })
+
   end
 end
 
 function Cell:createGraphics()
+  local dim = dimensions
 
   if 0 == self.coins then
     return
@@ -178,25 +226,37 @@ function Cell:createGraphics()
   end
 
   self.grp = display.newGroup()
+  self.grp.x = self.center.x
+  self.grp.y = self.center.y
   self.grid.shapesGroup:insert(self.grp)
 
   self.grpObjects = {}
 
   local bitCount = hammingWeight(self.coins)
-  if bitCount == 1 then
+  if 0 == self.coins then
+    -- local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
+    -- circle.strokeWidth = dim.Q10
+    -- circle:setStrokeColor(0.1,0.1,0.1)
+    -- circle:setFillColor(0,0,0)
+    -- table.insert(self.grpObjects, circle)
+  elseif bitCount == 1 then
     local cd = table.find(dim.cellData, function(b) return self.coins == b.bit end)
     assert(cd)
     local line = display.newLine(self.grp,
-      self.center.x,
-      self.center.y, 
-      self.center.x + cd.c2eX,
-      self.center.y + cd.c2eY)
-    line.strokeWidth = dim.Q10
+      0,
+      0, 
+      cd.c2eX,
+      cd.c2eY)
+    line.strokeWidth = dim.Q20
     line:setStrokeColor(unpack(self.color))
     table.insert(self.grpObjects, line)
 
-    local circle = display.newCircle(self.grp, self.center.x, self.center.y, dim.Q33)
-    circle.strokeWidth = dim.Q10
+    local endcap = display.newCircle(self.grp, cd.c2eX, cd.c2eY, dim.Q10)
+    endcap:setFillColor(unpack(self.color))
+    table.insert(self.grpObjects, endcap)
+
+    local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
+    circle.strokeWidth = dim.Q20
     circle:setStrokeColor(unpack(self.color))
     circle:setFillColor(0,0,0)
     table.insert(self.grpObjects, circle)
@@ -206,10 +266,10 @@ function Cell:createGraphics()
     for _,cd in ipairs(dim.cellData) do
       if bit.band(cd.bit, self.coins) == cd.bit then
         local line = display.newLine(self.grp,
-        self.center.x,
-        self.center.y, 
-        self.center.x + cd.c2eX,
-        self.center.y + cd.c2eY)
+        0,
+        0, 
+        cd.c2eX,
+        cd.c2eY)
         line.strokeWidth = dim.Q10
       end
     end
@@ -219,7 +279,7 @@ function Cell:createGraphics()
     local arr = {}
     for _,cd in ipairs(dim.cellData) do
       if bit.band(self.coins, cd.bit) == cd.bit then
-        table.insert(arr, {x=self.center.x + cd.c2eX, y=self.center.y + cd.c2eY})
+        table.insert(arr, {x=cd.c2eX, y=cd.c2eY})
       end
     end
     -- close path for better aesthetics
@@ -229,21 +289,25 @@ function Cell:createGraphics()
     assert(#arr > 1)
     -- print(
     --   arr[1].x, arr[1].y, 
-    --   self.center.x, self.center.y,
     --   arr[2].x, arr[2].y)
     for n = 1, #arr-1 do
-      local cp1 = {x=(self.center.x + arr[n].x)/2, y=(self.center.y + arr[n].y)/2}
-      local cp2 = {x=(self.center.x + arr[n+1].x)/2, y=(self.center.y + arr[n+1].y)/2}
+      local cp1 = {x=(arr[n].x)/2, y=(arr[n].y)/2}
+      local cp2 = {x=(arr[n+1].x)/2, y=(arr[n+1].y)/2}
       local curve = bezier.new(
         arr[n].x, arr[n].y, 
         cp1.x, cp1.y,
         cp2.x, cp2.y,
         arr[n+1].x, arr[n+1].y)
       local curveDisplayObject = curve:get()
-      curveDisplayObject.strokeWidth = dim.Q10
+      curveDisplayObject.strokeWidth = dim.Q20
       curveDisplayObject:setStrokeColor(unpack(self.color))
       self.grp:insert(curveDisplayObject)
       table.insert(self.grpObjects, curveDisplayObject)
+    end
+    for n = 1, #arr do
+      local endcap = display.newCircle(self.grp, arr[n].x, arr[n].y, dim.Q10)
+      endcap:setFillColor(unpack(self.color))
+      table.insert(self.grpObjects, endcap)
     end
   end
 end

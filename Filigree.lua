@@ -6,6 +6,7 @@ local Grid = require 'Grid'
 local physics = require 'physics'
 physics.start()
 physics.setGravity(0, 0.98)
+print(physics.engineVersion)
 
 local composer = require('composer')
 local scene = composer.newScene()
@@ -16,20 +17,33 @@ local backGroup, gridGroup, shapesGroup
 
 local gameLoopTimer = nil
 
+local grid = nil
+
 local function createAsteroid()
   local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), 0, math.random(10))
-  newAsteroid:setFillColor(0.1,0.1,0.1)
+  if grid.complete then
+    newAsteroid:setFillColor(1,1,1)
+  else
+    newAsteroid:setFillColor(0.1,0.1,0.1)
+  end
   table.insert(asteroidsTable, newAsteroid)
-  physics.addBody(newAsteroid, 'dynamic', { radius=40, bounce=0.8 } )
-  newAsteroid:setLinearVelocity( math.random( 4,12 ), math.random( 2,6 ) )
-  newAsteroid:applyTorque( math.random( -2,2 ) )
+  physics.addBody(newAsteroid, 'dynamic', { density=0.5, radius=10, bounce=0.9 } )
+  newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( 0,100 ) )
+  -- newAsteroid:applyTorque( math.random( -10,10 ) )
 end
 
 local function gameLoop()
  
   -- Create new asteroid
-  createAsteroid()
--- Remove asteroids which have drifted off screen
+  if grid.complete then
+    for a = 1, 3 do
+      createAsteroid()
+    end
+  else
+    createAsteroid()
+  end
+
+  -- Remove asteroids which have drifted off screen
   for i = #asteroidsTable, 1, -1 do
     local thisAsteroid = asteroidsTable[i]
 
@@ -68,7 +82,7 @@ function scene:create(event)
   -- for debugging the gaps between hexagons problem
   -- display.setDefault('background', 0.5,0.5,0.5)
 
-  local grid = Grid:new(gridGroup, shapesGroup, numX, numY)
+  grid = Grid:new(gridGroup, shapesGroup, numX, numY)
   grid:linkCells2()
   grid:placeCoins()
   grid:colorCoins()
@@ -82,7 +96,7 @@ function scene:show(event)
 
   if phase == 'will' then
     -- Code here runs when the scene is still off screen (but is about to come on screen)
-    gameLoopTimer = timer.performWithDelay(500, gameLoop, 0)
+    gameLoopTimer = timer.performWithDelay(400, gameLoop, 0)
   elseif phase == 'did' then
     -- Code here runs when the scene is entirely on screen
   end

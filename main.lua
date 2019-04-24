@@ -62,4 +62,17 @@ if not table.find then
 end
 print('table find', type(table.find))
 
+if not table.filter then
+  table.filter = function(t, filterIter)
+    local out = {}
+  
+    for k, v in pairs(t) do
+      if filterIter(v, k, t) then table.insert(out, v) end
+    end
+  
+    return out
+  end
+end
+print('table filter', type(table.filter))
+
 composer.gotoScene('Splash', {effect='fade', params={scene='Filigree'}})

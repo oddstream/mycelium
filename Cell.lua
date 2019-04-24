@@ -31,6 +31,7 @@ Cell = {
 
   color = nil,  -- e.g. {0,1,0}
   hexagon = nil,     -- ShapeObject for outline
+  section = nil,
 
   grp = nil,  -- group to put shapes in
   grpObjects = nil,
@@ -63,7 +64,7 @@ function Cell:new(grid, x, y)
   o.hexagon = display.newPolygon(o.grid.gridGroup, o.center.x, o.center.y, dim.vertices)
   o.hexagon:setFillColor(0,0,0)
   if SHOW_HEXAGON then
-    o.hexagon:setStrokeColor(0.1)
+    o.hexagon:setStrokeColor(0.05)
     o.hexagon.strokeWidth = 2
   end
 
@@ -101,13 +102,19 @@ function Cell:shiftBits(num)
   end
 end
 
-function Cell:isComplete()
+function Cell:isComplete(section)
   local dim = dimensions
 
+  if section and self.section ~= section then
+    return false
+  end
   for _, cd in ipairs(dim.cellData) do
     if bit.band(self.coins, cd.bit) == cd.bit then
       local cn = self[cd.link]
       if not cn then
+        return false
+      end
+      if section and cn.section ~= section then
         return false
       end
       if bit.band(cn.coins, cd.oppBit) == 0 then
@@ -146,15 +153,17 @@ function Cell:jumbleCoin()
   self:shiftBits(math.random(5))
 end
 
-function Cell:colorConnected(color)
+function Cell:colorConnected(color, section)
   local dim = dimensions
 
   self.color = color
+  self.section = section
+
   for _, cd in ipairs(dim.cellData) do
     if bit.band(self.coins, cd.bit) == cd.bit then
       local cn = self[cd.link]
       if cn and cn.coins ~= 0 and cn.color == nil then
-        cn:colorConnected(color)
+        cn:colorConnected(color, section)
       end
     end
   end
@@ -188,6 +197,9 @@ function Cell:tap(event)
   local function afterRotate()
     self:shiftBits()
     self:createGraphics()
+    if self.grid:isSectionComplete(self.section) then
+      print('section complete')
+    end
     if self.grid:isComplete() then
       self.grid:ding()
       self.grid:colorComplete()
@@ -200,6 +212,8 @@ function Cell:tap(event)
 ]]
   if self.grid:isComplete() then
     self.grid:reset()
+  elseif self.section == 0 then
+    print('locked') -- TODO play a locked sound, or shake screen/section
   elseif self.grp then
     -- self.grp.anchorChildren = true
     -- self.grp.anchorX = 0
@@ -209,7 +223,6 @@ function Cell:tap(event)
       rotation = 45,  -- enough to give illusion, no need for full 60 degrees
       onComplete = afterRotate,
     })
-
   end
 end
 

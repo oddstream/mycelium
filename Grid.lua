@@ -12,6 +12,8 @@ Grid = {
   width = nil,      -- number of columns
   height = nil,      -- number of rows
 
+  complete = nil,
+
   dingSound = nil,
 }
 
@@ -33,6 +35,8 @@ function Grid:new(gridGroup, shapesGroup, width, height)
       table.insert(o.cells, c) -- push
     end
   end
+
+  complete = false
 
   o.dingSound = audio.loadSound('complete.wav')
 
@@ -61,70 +65,13 @@ function Grid:reset()
   self:colorCoins()
   self:jumbleCoins()
   self:createGraphics()
+
+  self.complete = false
 end
 
 function Grid:ding()
   audio.play(self.dingSound)
 end
-
---[[
-function Grid:linkCells()
-  local dim = dimensions
-
-  -- print('linking', #self.cells, 'cells')
-  local links = 0
-  for _,c in ipairs(self.cells) do
-    local fc -- found cell
-    -- look to ne
-    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x - dim.W50) and (c.center.y == d.center.y + dim.H75) end)
-    if fc then
-      links = links + 1
-      c.ne = fc
-      -- fc.sw = c
-    end
-    -- look to e
-    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x - dim.W) and (c.center.y == d.center.y) end)
-    if fc then
-      -- print('linking e-w', c.x, c.y, 'and', fc.x, fc.y)
-      links = links + 1
-      c.e = fc
-      -- fc.w = c
-    end
-    -- look se
-    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x - dim.W50) and (c.center.y == d.center.y - dim.H75) end)
-    if fc then
-      -- print('linking se-nw', c.x, c.y, 'and', fc.x, fc.y)
-      links = links + 1
-      c.se = fc
-      -- fc.nw = c
-    end
-    -- look sw
-    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x + dim.W50) and (c.center.y == d.center.y - dim.H75) end)
-    if fc then
-      -- print('linking sw-ne', c.x, c.y, 'and', fc.x, fc.y)
-      links = links + 1
-      c.sw = fc
-      -- fc.ne = c
-    end
-    -- look w
-    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x + dim.W) and (c.center.y == d.center.y) end)
-    if fc then
-      links = links + 1
-      c.w = fc
-      -- fc.e = c
-    end
-    -- look nw
-    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x + dim.W50) and (c.center.y == d.center.y + dim.H75) end)
-    if fc then
-      links = links + 1
-      c.nw = fc
-      -- fc.se = c
-    end
-
-  end
-  -- print(links, 'links made')
-end
-]]
 
 function Grid:linkCells2()
   for _,c in ipairs(self.cells) do
@@ -220,33 +167,52 @@ function Grid:colorCoins()
   -- https://en.wikipedia.org/wiki/Web_colors
   local colorsGreen = {
     {0,100,0},  -- DarkGreen
+    {85,107,47},  -- DarkOliveGreen
     {107,142,35},  -- OliveDrab
     {139,69,19},  -- SaddleBrown
-    {0,64,0},
     {80,80,0},  -- Olive
     {154,205,50},  -- YellowGreen
-    {46,139,87} -- SeaGreen
+    {46,139,87}, -- SeaGreen
+    {128,128,128},
   }
-  --[[
   local colorsPink = {
-    {199,21,133},
-    {219,112,147},
-    {255,20,147},
-    {255,105,180},
-    {255,192,203},
+    {255,192,203}, -- Pink
+    {255,105,180}, -- HotPink
+    {219,112,147}, -- PaleVioletRed
+    {255,20,147},  -- DeepPink
+    {199,21,133},  -- MediumVioletRed
+
+    {238,130,238}, -- Violet
   }
-  ]]
   local colorsBlue = {
     {25,25,112},
-    {0,0,205},
     {65,105,225},
     {30,144,255},
     {135,206,250},
     {176,196,222},
+    {0,0,205},
+  }
+  local colorsOrange = {
+    {255,165,0},
+    {255,69,0},
+    {255,127,80},
+    {255,140,0},
+    {255,99,71},
+    {128,128,128},
+  }
+  local colorsGray = {
+    {128,128,128},
+    {192,192,192},
+    {112,128,144},
+    {220,220,220},
+    {49,79,79},
   }
   local colorsAll = {
     colorsGreen,
     colorsBlue,
+    colorsOrange,
+    -- colorsPink,
+    colorsGray,
   }
   local colors = colorsAll[math.random(#colorsAll)]
   for _,row in ipairs(colors) do
@@ -256,13 +222,15 @@ function Grid:colorCoins()
   end
 
   local nColor = 1
+  local section = 1
   local c = table.find(self.cells, function(d) return d.coins ~= 0 and d.color == nil end)
   while c do
-    c:colorConnected(colors[nColor])
+    c:colorConnected(colors[nColor], section)
     nColor = nColor + 1
     if nColor > #colors then
       nColor = 1
     end
+    section = section + 1
     c = table.find(self.cells, function(d) return d.coins ~= 0 and d.color == nil end)
   end
 end
@@ -277,11 +245,25 @@ function Grid:isComplete()
       return false
     end
   end
+  self.complete = true
+  return true
+end
+
+function Grid:isSectionComplete(section)
+  arr = table.filter(self.cells, function(c) return c.section == section end)
+  for n = 1, #arr do
+    if not arr[n]:isComplete(section) then
+      return false
+    end
+  end
+  for n = 1, #arr do
+    arr[n].section = 0  -- lock cell from moving
+  end
   return true
 end
 
 function Grid:colorComplete()
-  self:iterator( function(c) c:setColor({1,1,1}) end )
+  self:iterator( function(c) c:setColor({0.5,0.5,0.5}) end )
 end
 
 return Grid

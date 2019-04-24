@@ -24,17 +24,17 @@ function scene:show(event)
     -- Code here runs when the scene is still off screen (but is about to come on screen)
     local x = display.contentCenterX
     local y = display.contentCenterY
-    local cir = display.newCircle(sceneGroup, x, y, 180)
+    local cir = display.newCircle(sceneGroup, x, y, 210)
     cir:setFillColor(0.2, 0.2, 0.2)
 
-    local y = display.contentCenterY - 100
-    local txt1  = display.newText(sceneGroup, 'oddstream', x, y, native.systemFontBold, 72)
-
-    y = display.contentCenterY
+    y = display.contentCenterY - 110
     logo = display.newImage(sceneGroup, 'oddstream logo.png', system.ResourceDirectory, x, y)
 
     assert(logo:addEventListener('tap', gotoDestination))
   
+    local y = display.contentCenterY
+    local txt1  = display.newText(sceneGroup, 'oddstream', x, y, native.systemFontBold, 72)
+
     y = display.contentCenterY + 100
     local txt2  = display.newText(sceneGroup, 'games', x, y, native.systemFontBold, 72)
 

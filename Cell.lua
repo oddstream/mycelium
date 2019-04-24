@@ -128,17 +128,12 @@ function Cell:placeCoin(mirror)
         self[cd.link].coins = bit.bor(self[cd.link].coins, cd.oppBit)
 
         if mirror then
-          local vcd = dim.cellData[cd.vsym]
-          assert(vcd)
-          assert(vcd.bit)
-          if not mirror[vcd.link] then
-          
-            print('origin', self.x, self.y, 'link', cd.link)
-            print('mirror', mirror.x, mirror.y, 'no link', vcd.link)
-            -- error()
-          else
-            mirror.coins = bit.bor(mirror.coins, vcd.bit)
-            mirror[vcd.link].coins = bit.bor(mirror[vcd.link].coins, vcd.oppBit)
+          local m_cd = dim.cellData[cd.vsym]
+          assert(m_cd)
+          assert(m_cd.bit)
+          if mirror[m_cd.link] then
+            mirror.coins = bit.bor(mirror.coins, m_cd.bit)
+            mirror[m_cd.link].coins = bit.bor(mirror[m_cd.link].coins, m_cd.oppBit)
           end
         end
 
@@ -186,6 +181,7 @@ function Cell:setColor(color)
 end
 
 function Cell:tap(event)
+  local dim = dimensions
   -- implement table listener for tap events
   -- print('tap', self.x, self.y, self.coins, hammingWeight(self.coins))
 
@@ -198,14 +194,10 @@ function Cell:tap(event)
     end
   end
 --[[
-  if not self.ne then print('no ne') end
-  if not self.e then print('no e') end
-  if not self.se then print('no se') end
-  if not self.sw then print('no sw') end
-  if not self.w then print('no w') end
-  if not self.nw then print('no nw') end
+  for _,cd in ipairs(dim.cellData) do
+    if not self[cd.link] then print(self.x, self.y, 'no link to', cd.link) end
+  end
 ]]
-
   if self.grid:isComplete() then
     self.grid:reset()
   elseif self.grp then
@@ -279,7 +271,6 @@ function Cell:createGraphics()
     end
     ]]
     -- make a list of edge coords we need to visit
-    -- use center and center as control points
     local arr = {}
     for _,cd in ipairs(dim.cellData) do
       if bit.band(self.coins, cd.bit) == cd.bit then
@@ -295,6 +286,7 @@ function Cell:createGraphics()
     --   arr[1].x, arr[1].y, 
     --   arr[2].x, arr[2].y)
     for n = 1, #arr-1 do
+    -- use (off-)center and (off-)center as control points
       local av = 1.8  -- make the three-edges circles round
       local cp1 = {x=(arr[n].x)/av, y=(arr[n].y)/av}
       local cp2 = {x=(arr[n+1].x)/av, y=(arr[n+1].y)/av}

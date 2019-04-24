@@ -1,12 +1,12 @@
 settings = 
 {
-    plugins =
+  plugins =
+  {
+    ["plugin.bit"] =
     {
-        ["plugin.bit"] =
-        {
-            publisherId = "com.coronalabs"
-        },
+      publisherId = "com.coronalabs"
     },
+  },
   window =
   {
     defaultMode = 'normal',

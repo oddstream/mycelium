@@ -4,6 +4,13 @@ local composer = require('composer')
 local scene = composer.newScene()
 
 local tim = nil
+local logo = nil
+local destination = nil
+
+function gotoDestination(event)
+  composer.gotoScene(destination, {effect='fade'})
+  return true -- we handled tap event
+end
 
 function scene:create(event)
   local sceneGroup = self.view
@@ -24,14 +31,17 @@ function scene:show(event)
     local txt1  = display.newText(sceneGroup, 'oddstream', x, y, native.systemFontBold, 72)
 
     y = display.contentCenterY
-    local img = display.newImage(sceneGroup, 'oddstream logo.png', system.ResourceDirectory, x, y)
+    logo = display.newImage(sceneGroup, 'oddstream logo.png', system.ResourceDirectory, x, y)
 
+    assert(logo:addEventListener('tap', gotoDestination))
+  
     y = display.contentCenterY + 100
     local txt2  = display.newText(sceneGroup, 'games', x, y, native.systemFontBold, 72)
 
   elseif phase == 'did' then
+    destination = event.params.scene
     -- Code here runs when the scene is entirely on screen
-    tim = timer.performWithDelay(1000, function() composer.gotoScene('Filigree', {effect='fade'}) end, 1)
+    tim = timer.performWithDelay(2000, gotoDestination, 1)
   end
 end
 
@@ -54,6 +64,7 @@ function scene:destroy(event)
     timer.cancel(tim)
     tim = nil
   end
+  logo:removeEventListener('tap', gotoDestination)
 end
 
 -- -----------------------------------------------------------------------------------

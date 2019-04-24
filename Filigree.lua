@@ -1,7 +1,6 @@
 -- Filigree.lua
 
 local Dim = require 'Dim'
-local Cell = require 'Cell'
 local Grid = require 'Grid'
 
 local composer = require('composer')
@@ -16,12 +15,8 @@ function scene:create(event)
   local shapesGroup = display.newGroup()
   sceneGroup:insert(shapesGroup)
 
-  -- local numX = 5
-  -- local numY = 10
-  local numX = 6
-  local numY = 12
-  -- local numX = 10
-  -- local numY = 20
+  local numX = 5
+  local numY = 10
 
   -- each cell is Q * math.sqrt(3) wide
   -- we need space for numX + a half
@@ -33,7 +28,7 @@ function scene:create(event)
   -- display.setDefault('background', 0.5,0.5,0.5)
 
   local grid = Grid:new(gridGroup, shapesGroup, numX, numY)
-  grid:linkCells()
+  grid:linkCells2()
   grid:placeCoins()
   grid:colorCoins()
   grid:jumbleCoins()

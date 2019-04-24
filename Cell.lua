@@ -5,7 +5,7 @@ local composer = require('composer')
 local bit = require('plugin.bit')
 local bezier = require('Bezier')
 
-local PLACE_COIN_CHANCE = 0.3
+local PLACE_COIN_CHANCE = 0.3333 / 2
 local SHOW_HEXAGON = true
 
 local function hammingWeight(coin)
@@ -135,10 +135,11 @@ function Cell:placeCoin(mirror)
           
             print('origin', self.x, self.y, 'link', cd.link)
             print('mirror', mirror.x, mirror.y, 'no link', vcd.link)
-            error()
+            -- error()
+          else
+            mirror.coins = bit.bor(mirror.coins, vcd.bit)
+            mirror[vcd.link].coins = bit.bor(mirror[vcd.link].coins, vcd.oppBit)
           end
-          mirror.coins = bit.bor(mirror.coins, vcd.bit)
-          mirror[vcd.link].coins = bit.bor(mirror[vcd.link].coins, vcd.oppBit)
         end
 
       end
@@ -196,6 +197,14 @@ function Cell:tap(event)
       self.grid:colorComplete()
     end
   end
+--[[
+  if not self.ne then print('no ne') end
+  if not self.e then print('no e') end
+  if not self.se then print('no se') end
+  if not self.sw then print('no sw') end
+  if not self.w then print('no w') end
+  if not self.nw then print('no nw') end
+]]
 
   if self.grid:isComplete() then
     self.grid:reset()
@@ -205,7 +214,7 @@ function Cell:tap(event)
     -- self.grp.anchorY = 0
     transition.to(self.grp, {
       time = 100,
-      rotation = 60,
+      rotation = 45,  -- enough to give illusion, no need for full 60 degrees
       onComplete = afterRotate,
     })
 
@@ -226,6 +235,7 @@ function Cell:createGraphics()
   end
 
   self.grp = display.newGroup()
+  -- center the group on the center of the hexagon, otherwise it's at 0,0
   self.grp.x = self.center.x
   self.grp.y = self.center.y
   self.grid.shapesGroup:insert(self.grp)
@@ -233,13 +243,7 @@ function Cell:createGraphics()
   self.grpObjects = {}
 
   local bitCount = hammingWeight(self.coins)
-  if 0 == self.coins then
-    -- local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
-    -- circle.strokeWidth = dim.Q10
-    -- circle:setStrokeColor(0.1,0.1,0.1)
-    -- circle:setFillColor(0,0,0)
-    -- table.insert(self.grpObjects, circle)
-  elseif bitCount == 1 then
+  if bitCount == 1 then
     local cd = table.find(dim.cellData, function(b) return self.coins == b.bit end)
     assert(cd)
     local line = display.newLine(self.grp,
@@ -283,7 +287,7 @@ function Cell:createGraphics()
       end
     end
     -- close path for better aesthetics
-    if bitCount == 2 then
+    if bitCount > 3 then
       table.insert(arr, arr[1])
     end
     assert(#arr > 1)
@@ -291,8 +295,9 @@ function Cell:createGraphics()
     --   arr[1].x, arr[1].y, 
     --   arr[2].x, arr[2].y)
     for n = 1, #arr-1 do
-      local cp1 = {x=(arr[n].x)/2, y=(arr[n].y)/2}
-      local cp2 = {x=(arr[n+1].x)/2, y=(arr[n+1].y)/2}
+      local av = 1.8  -- make the three-edges circles round
+      local cp1 = {x=(arr[n].x)/av, y=(arr[n].y)/av}
+      local cp2 = {x=(arr[n+1].x)/av, y=(arr[n+1].y)/av}
       local curve = bezier.new(
         arr[n].x, arr[n].y, 
         cp1.x, cp1.y,

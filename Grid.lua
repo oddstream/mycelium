@@ -2,6 +2,8 @@
 
 local composer = require('composer')
 
+local Cell = require 'Cell'
+
 Grid = {
   -- prototype object
   gridGroup = nil,
@@ -65,6 +67,7 @@ function Grid:ding()
   audio.play(self.dingSound)
 end
 
+--[[
 function Grid:linkCells()
   local dim = dimensions
 
@@ -72,29 +75,104 @@ function Grid:linkCells()
   local links = 0
   for _,c in ipairs(self.cells) do
     local fc -- found cell
+    -- look to ne
+    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x - dim.W50) and (c.center.y == d.center.y + dim.H75) end)
+    if fc then
+      links = links + 1
+      c.ne = fc
+      -- fc.sw = c
+    end
+    -- look to e
     fc = table.find(self.cells, function(d) return (c.center.x == d.center.x - dim.W) and (c.center.y == d.center.y) end)
     if fc then
       -- print('linking e-w', c.x, c.y, 'and', fc.x, fc.y)
       links = links + 1
       c.e = fc
-      fc.w = c
+      -- fc.w = c
     end
-    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x-(dim.W50)) and (c.center.y == d.center.y-dim.H75) end)
+    -- look se
+    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x - dim.W50) and (c.center.y == d.center.y - dim.H75) end)
     if fc then
       -- print('linking se-nw', c.x, c.y, 'and', fc.x, fc.y)
       links = links + 1
       c.se = fc
-      fc.nw = c
+      -- fc.nw = c
     end
-    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x+(dim.W50)) and (c.center.y == d.center.y-dim.H75) end)
+    -- look sw
+    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x + dim.W50) and (c.center.y == d.center.y - dim.H75) end)
     if fc then
       -- print('linking sw-ne', c.x, c.y, 'and', fc.x, fc.y)
       links = links + 1
       c.sw = fc
-      fc.ne = c
+      -- fc.ne = c
     end
+    -- look w
+    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x + dim.W) and (c.center.y == d.center.y) end)
+    if fc then
+      links = links + 1
+      c.w = fc
+      -- fc.e = c
+    end
+    -- look nw
+    fc = table.find(self.cells, function(d) return (c.center.x == d.center.x + dim.W50) and (c.center.y == d.center.y + dim.H75) end)
+    if fc then
+      links = links + 1
+      c.nw = fc
+      -- fc.se = c
+    end
+
   end
   -- print(links, 'links made')
+end
+]]
+
+function Grid:linkCells2()
+  for _,c in ipairs(self.cells) do
+    local fc -- found cell
+
+    -- matters if x is odd or even
+    -- even x: cells to ne or se will be == x
+    -- even x cells to sw or nw will be x - 1
+    -- odd x: cells to se or ne will be x + 1
+    -- odd x: cells to sw or nw will be == x
+
+    local oddRow = math.fmod(c.y,2) == 1
+    local xdiffE, xdiffW
+
+    if oddRow then xdiffE = 1 else xdiffE = 0 end -- easterly
+    if oddRow then xdiffW = 0 else xdiffW = -1 end -- westerly
+
+    fc = self:findCell(c.x + xdiffE, c.y - 1)
+    if fc then
+      c.ne = fc
+    end
+
+    fc = self:findCell(c.x + 1, c.y)
+    if fc then
+      c.e = fc
+    end
+
+    fc = self:findCell(c.x + xdiffE, c.y + 1)
+    if fc then
+      c.se = fc
+    end
+
+    fc = self:findCell(c.x + xdiffW, c.y + 1)
+    if fc then
+      c.sw = fc
+    end
+
+    fc = self:findCell(c.x - 1, c.y)
+    if fc then
+      c.w = fc
+    end
+
+    fc = self:findCell(c.x + xdiffW, c.y - 1)
+    if fc then
+      c.nw = fc
+    end
+
+  end
 end
 
 function Grid:iterator(fn)
@@ -104,9 +182,13 @@ function Grid:iterator(fn)
 end
 
 function Grid:findCell(x,y)
-  local c = table.find(self.cells, function(d) return d.x == x and d.y == y end)
-  if not c then print('*** cannot find', x, y) end
-  return c
+  for _,c in ipairs(self.cells) do
+    if c.x == x and c.y == y then
+      return c
+    end
+  end
+  -- print('*** cannot find cell', x, y)
+  return nil
 end
 
 function Grid:randomCell()
@@ -120,8 +202,8 @@ end
 function Grid:placeCoins()
   local dim = dimensions
 
-  self:iterator(function(c) c:placeCoin() end)
---[[
+  -- self:iterator(function(c) c:placeCoin() end)
+
   local yS = self.height
   for yN = 1, self.height/2 do
     for x = 1, self.width do
@@ -132,27 +214,7 @@ function Grid:placeCoins()
     end
     yS = yS - 1
   end
-  ]]
 end
---[[
-function Grid:placeCircle(x,y)
-  local dim = dimensions
-
-  local path = {
-    {link='ne', bit=dim.SOUTHEAST},
-    {link='se', bit=dim.SOUTHWEST},
-    {link='sw', bit=dim.WEST},
-    {link='w', bit=dim.NORTHEAST},
-    {link='ne', bit=dim.EAST},
-  }
-  local c = self:findCell(x,y)
-  for i=1, #path do
-    c = c[path[i].link]
-    c.coins = bit.bor(c.coins, path[i].bit)
-  end
-
-end
-]]
 
 function Grid:colorCoins()
   -- https://en.wikipedia.org/wiki/Web_colors

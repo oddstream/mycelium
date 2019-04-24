@@ -62,4 +62,4 @@ if not table.find then
 end
 print('table find', type(table.find))
 
-composer.gotoScene('Splash')
+composer.gotoScene('Splash', {effect='fade', params={scene='Filigree'}})

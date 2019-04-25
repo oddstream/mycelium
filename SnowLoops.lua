@@ -1,4 +1,4 @@
--- Filigree.lua
+-- SnowLoops.lua
 
 local Dim = require 'Dim'
 local Grid = require 'Grid'
@@ -24,7 +24,7 @@ local function createAsteroid()
   if grid.complete then
     newAsteroid:setFillColor(1,1,1)
   else
-    newAsteroid:setFillColor(0.1,0.1,0.1)
+    newAsteroid:setFillColor(0.2,0.2,0.2)
   end
   table.insert(asteroidsTable, newAsteroid)
   physics.addBody(newAsteroid, 'dynamic', { density=0.5, radius=10, bounce=0.9 } )

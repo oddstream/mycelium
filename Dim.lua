@@ -17,9 +17,6 @@ Dim = {
   Q10 = nil,
   Q20 = nil,
 
-  X60 = nil,
-  Y60 = nil,
-
   NORTHEAST = 1,
   EAST = 2,
   SOUTHEAST = 4,
@@ -30,7 +27,9 @@ Dim = {
   MASK = 63,
 
   cellData = nil,
-  vertices = nil,
+  snowflakeLines = nil,
+  snowflakeHex = nil,
+  cellHex = nil,
 }
 
 -- https://www.redblobgames.com/grids/hexagons/
@@ -60,19 +59,41 @@ function Dim:new(Q)
 
   -- https://gamedev.stackexchange.com/questions/18340/get-position-of-point-on-circumference-of-circle-given-an-angle
   local apothem = Q * math.cos(30 * math.pi / 180)  --  0.86602529158357
-  o.X60 = math.floor(math.cos(60 * math.pi / 180) * apothem)
-  o.Y60 = math.floor(math.sin(60 * math.pi / 180) * apothem)
+  local X60 = math.floor(math.cos(60 * math.pi / 180) * apothem)
+  local Y60 = math.floor(math.sin(60 * math.pi / 180) * apothem)
   
   o.cellData = {
-    { bit=o.NORTHEAST,  oppBit=o.SOUTHWEST, link='ne',  vsym=3,  c2eX=o.X60,    c2eY=-o.Y60, },
+    { bit=o.NORTHEAST,  oppBit=o.SOUTHWEST, link='ne',  vsym=3,  c2eX=X60,    c2eY=-Y60, },
     { bit=o.EAST,       oppBit=o.WEST,      link='e',   vsym=2,  c2eX=o.W50,    c2eY=0,      },
-    { bit=o.SOUTHEAST,  oppBit=o.NORTHWEST, link='se',  vsym=1,  c2eX=o.X60,    c2eY=o.Y60,  },
-    { bit=o.SOUTHWEST,  oppBit=o.NORTHEAST, link='sw',  vsym=6,  c2eX=-o.X60,   c2eY=o.Y60,  },
+    { bit=o.SOUTHEAST,  oppBit=o.NORTHWEST, link='se',  vsym=1,  c2eX=X60,    c2eY=Y60,  },
+    { bit=o.SOUTHWEST,  oppBit=o.NORTHEAST, link='sw',  vsym=6,  c2eX=-X60,   c2eY=Y60,  },
     { bit=o.WEST,       oppBit=o.EAST,      link='w',   vsym=5,  c2eX=-o.W50,   c2eY=0,      },
-    { bit=o.NORTHWEST,  oppBit=o.SOUTHEAST, link='nw',  vsym=4,  c2eX=-o.X60,   c2eY=-o.Y60, }
+    { bit=o.NORTHWEST,  oppBit=o.SOUTHEAST, link='nw',  vsym=4,  c2eX=-X60,   c2eY=-Y60, }
   }
 
-  o.vertices = {
+  local apothem50 = Q/2 * math.cos(30 * math.pi / 180)
+  local sx = math.floor(math.cos(60 * math.pi / 180) * apothem50)
+  local sy = math.floor(math.sin(60 * math.pi / 180) * apothem50)
+
+  o.snowflakeLines = {
+    {x=sx, y=-sy},
+    {x=o.W25, y=0},
+    {x=sx, y=sy},
+    {x=-sx, y=sy},
+    {x=-o.W25, y=0},
+    {x=-sx, y=-sy},
+  }
+
+  o.snowflakeHex = {
+    sx, -sy,
+    o.W25, 0,
+    sx, sy,
+    -sx, sy,
+    -o.W25, 0,
+    -sx, -sy,
+  }
+
+  o.cellHex = {
     0,-(o.H50),  -- N 1,2
     o.W50,-(o.H25), -- NE 3,4
     o.W50,o.H25,    -- SE 5,6

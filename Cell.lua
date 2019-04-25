@@ -61,7 +61,7 @@ function Cell:new(grid, x, y)
   o.center.x = o.center.x + dim.W50 + 5
 
   -- "These coordinates will automatically be re-centered about the center of the polygon."
-  o.hexagon = display.newPolygon(o.grid.gridGroup, o.center.x, o.center.y, dim.vertices)
+  o.hexagon = display.newPolygon(o.grid.gridGroup, o.center.x, o.center.y, dim.cellHex)
   o.hexagon:setFillColor(0,0,0)
   if SHOW_HEXAGON then
     o.hexagon:setStrokeColor(0.05)
@@ -265,11 +265,30 @@ function Cell:createGraphics()
     endcap:setFillColor(unpack(self.color))
     table.insert(self.grpObjects, endcap)
 
-    local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
-    circle.strokeWidth = dim.Q20
-    circle:setStrokeColor(unpack(self.color))
-    circle:setFillColor(0,0,0)
-    table.insert(self.grpObjects, circle)
+    if math.fmod(self.section,3) == 1 then 
+      local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
+      circle.strokeWidth = dim.Q20
+      circle:setStrokeColor(unpack(self.color))
+      circle:setFillColor(0,0,0)
+      table.insert(self.grpObjects, circle)
+    elseif math.fmod(self.section,3) == 2 then
+      local hexagon = display.newPolygon(self.grp, 0, 0, dim.snowflakeHex)
+      hexagon:setFillColor(0,0,0)
+      hexagon:setStrokeColor(unpack(self.color))
+      hexagon.strokeWidth = dim.Q20
+      table.insert(self.grpObjects, hexagon)
+    else
+      for _,sd in ipairs(dim.snowflakeLines) do
+        local line = display.newLine(self.grp, 0, 0, sd.x, sd.y)
+        line.strokeWidth = dim.Q20
+        line:setStrokeColor(unpack(self.color))
+        table.insert(self.grpObjects, line)
+
+        local endcap = display.newCircle(self.grp, sd.x, sd.y, dim.Q10)
+        endcap:setFillColor(unpack(self.color))
+        table.insert(self.grpObjects, endcap)
+      end
+    end
   else
     -- until Bezier curves, just draw a line from coin-bit-edge to center
     --[[

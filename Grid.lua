@@ -14,7 +14,10 @@ Grid = {
 
   complete = nil,
 
+  tapSound = nil,
+  sectionSound = nil,
   dingSound = nil,
+  lockedSound = nil,
 }
 
 function Grid:new(gridGroup, shapesGroup, width, height)
@@ -38,7 +41,10 @@ function Grid:new(gridGroup, shapesGroup, width, height)
 
   complete = false
 
+  o.tapSound = audio.loadSound('sound56.wav')
+  o.sectionSound = audio.loadSound('sound63.wav')
   o.dingSound = audio.loadSound('complete.wav')
+  o.lockedSound = audio.loadSound('sound61.wav')
 
   return o
 end
@@ -69,8 +75,16 @@ function Grid:reset()
   self.complete = false
 end
 
-function Grid:ding()
-  audio.play(self.dingSound)
+function Grid:sound(type)
+  if type == 'tap' then
+    if self.tapSound then audio.play(self.tapSound) end
+  elseif type == 'section' then
+    if self.sectionSound then audio.play(self.sectionSound) end
+  elseif type == 'complete' then
+    if self.dingSound then audio.play(self.dingSound) end
+  elseif type == 'locked' then
+    if self.lockedSound then audio.play(self.lockedSound) end
+  end
 end
 
 function Grid:linkCells2()
@@ -263,7 +277,27 @@ function Grid:isSectionComplete(section)
 end
 
 function Grid:colorComplete()
-  self:iterator( function(c) c:setColor({0.5,0.5,0.5}) end )
+  self:iterator( function(c) c:colorComplete() end )
+end
+
+function Grid:destroy()
+  audio.stop()  -- stop all channels
+  if self.dingSound then
+    audio.dispose(self.dingSound)
+    self.dingSound = nil
+  end
+  if self.sectionSound then
+    audio.dispose(self.sectionSound)
+    self.sectionSound = nil
+  end
+  if self.tapSound then
+    audio.dispose(self.tapSound)
+    self.tapSound = nil
+  end
+  if self.lockedSound then
+    audio.dispose(self.lockedSound)
+    self.lockedSound = nil
+  end
 end
 
 return Grid

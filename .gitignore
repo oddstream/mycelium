@@ -1,5 +1,4 @@
 desktop.ini
-test*.*
-sound.unused/*.*
+*.code-workspace
 *.wav
 *.mp3

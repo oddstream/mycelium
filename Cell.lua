@@ -58,7 +58,7 @@ function Cell:new(grid, x, y)
     o.center.x = o.center.x + dim.W50
   end
   -- can't have the center being on the edge of the screen, it would clip left of first cell
-  o.center.x = o.center.x + dim.W50
+  o.center.x = o.center.x + dim.W50 + 5
 
   -- "These coordinates will automatically be re-centered about the center of the polygon."
   o.hexagon = display.newPolygon(o.grid.gridGroup, o.center.x, o.center.y, dim.vertices)
@@ -169,7 +169,7 @@ function Cell:colorConnected(color, section)
   end
 end
 
-function Cell:setColor(color)
+function Cell:colorComplete()
 --[[
   When you modify a group's properties, all of its children are affected. 
   For example, if you set the alpha property on a display group, 
@@ -179,11 +179,11 @@ function Cell:setColor(color)
 ]]
   if self.grpObjects then
     for _, o in ipairs(self.grpObjects) do
-      if o.setStrokeColor then
-        o:setStrokeColor(unpack(color))
-      end
+      -- if o.setStrokeColor then
+      --   o:setStrokeColor(unpack(self.color))
+      -- end
       if o.setFillColor then
-        o:setFillColor(unpack(color))
+        o:setFillColor(unpack(self.color))
       end
     end
   end
@@ -198,10 +198,10 @@ function Cell:tap(event)
     self:shiftBits()
     self:createGraphics()
     if self.grid:isSectionComplete(self.section) then
-      print('section complete')
+      self.grid:sound('section')
     end
     if self.grid:isComplete() then
-      self.grid:ding()
+      self.grid:sound('complete')
       self.grid:colorComplete()
     end
   end
@@ -213,8 +213,9 @@ function Cell:tap(event)
   if self.grid:isComplete() then
     self.grid:reset()
   elseif self.section == 0 then
-    print('locked') -- TODO play a locked sound, or shake screen/section
+    self.grid:sound('locked')
   elseif self.grp then
+    self.grid:sound('tap')
     -- self.grp.anchorChildren = true
     -- self.grp.anchorX = 0
     -- self.grp.anchorY = 0

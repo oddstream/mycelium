@@ -20,7 +20,7 @@ settings =
     suspendWhenMinimized = true,
     titleText =
     {
-      default = 'FILIGREE'
+      default = 'Mycelium Network'
     }
   },
   excludeFiles =

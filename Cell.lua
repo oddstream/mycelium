@@ -64,7 +64,7 @@ function Cell:new(grid, x, y)
   o.hexagon = display.newPolygon(o.grid.gridGroup, o.center.x, o.center.y, dim.cellHex)
   o.hexagon:setFillColor(0,0,0)
   if SHOW_HEXAGON then
-    o.hexagon:setStrokeColor(0.05)
+    o.hexagon:setStrokeColor(0.1)
     o.hexagon.strokeWidth = 2
   end
 
@@ -179,11 +179,11 @@ function Cell:colorComplete()
 ]]
   if self.grpObjects then
     for _, o in ipairs(self.grpObjects) do
-      -- if o.setStrokeColor then
-      --   o:setStrokeColor(unpack(self.color))
-      -- end
+      if o.setStrokeColor then
+        o:setStrokeColor(0.8,0.8,0.8)
+      end
       if o.setFillColor then
-        o:setFillColor(unpack(self.color))
+        o:setFillColor(0.8,0.8,0.8)
       end
     end
   end
@@ -248,6 +248,9 @@ function Cell:createGraphics()
 
   self.grpObjects = {}
 
+  local sWidth = dim.Q16
+  local capRadius = math.floor(sWidth/2)
+
   local bitCount = hammingWeight(self.coins)
   if bitCount == 1 then
     local cd = table.find(dim.cellData, function(b) return self.coins == b.bit end)
@@ -257,38 +260,39 @@ function Cell:createGraphics()
       0, 
       cd.c2eX,
       cd.c2eY)
-    line.strokeWidth = dim.Q20
+    line.strokeWidth = sWidth
     line:setStrokeColor(unpack(self.color))
     table.insert(self.grpObjects, line)
 
-    local endcap = display.newCircle(self.grp, cd.c2eX, cd.c2eY, dim.Q10)
+    local endcap = display.newCircle(self.grp, cd.c2eX, cd.c2eY, capRadius)
     endcap:setFillColor(unpack(self.color))
     table.insert(self.grpObjects, endcap)
 
-    if math.fmod(self.section,3) == 1 then 
+    -- if math.fmod(self.section,3) == 1 then 
       local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
-      circle.strokeWidth = dim.Q20
+      circle.strokeWidth = sWidth
       circle:setStrokeColor(unpack(self.color))
       circle:setFillColor(0,0,0)
       table.insert(self.grpObjects, circle)
-    elseif math.fmod(self.section,3) == 2 then
-      local hexagon = display.newPolygon(self.grp, 0, 0, dim.snowflakeHex)
-      hexagon:setFillColor(0,0,0)
-      hexagon:setStrokeColor(unpack(self.color))
-      hexagon.strokeWidth = dim.Q20
-      table.insert(self.grpObjects, hexagon)
-    else
-      for _,sd in ipairs(dim.snowflakeLines) do
-        local line = display.newLine(self.grp, 0, 0, sd.x, sd.y)
-        line.strokeWidth = dim.Q20
-        line:setStrokeColor(unpack(self.color))
-        table.insert(self.grpObjects, line)
 
-        local endcap = display.newCircle(self.grp, sd.x, sd.y, dim.Q10)
-        endcap:setFillColor(unpack(self.color))
-        table.insert(self.grpObjects, endcap)
-      end
-    end
+    -- elseif math.fmod(self.section,3) == 2 then
+    --   for _,sd in ipairs(dim.snowflakeLines) do
+    --     local line = display.newLine(self.grp, 0, 0, sd.x, sd.y)
+    --     line.strokeWidth = sWidth
+    --     line:setStrokeColor(unpack(self.color))
+    --     table.insert(self.grpObjects, line)
+
+    --     local endcap = display.newCircle(self.grp, sd.x, sd.y, capRadius)
+    --     endcap:setFillColor(unpack(self.color))
+    --     table.insert(self.grpObjects, endcap)
+    --   end
+    -- else
+    --   local hexagon = display.newPolygon(self.grp, 0, 0, dim.snowflakeHex)
+    --   hexagon:setFillColor(0,0,0)
+    --   hexagon:setStrokeColor(unpack(self.color))
+    --   hexagon.strokeWidth = sWidth
+    --   table.insert(self.grpObjects, hexagon)
+    -- end
   else
     -- until Bezier curves, just draw a line from coin-bit-edge to center
     --[[
@@ -329,13 +333,13 @@ function Cell:createGraphics()
         cp2.x, cp2.y,
         arr[n+1].x, arr[n+1].y)
       local curveDisplayObject = curve:get()
-      curveDisplayObject.strokeWidth = dim.Q20
+      curveDisplayObject.strokeWidth = sWidth
       curveDisplayObject:setStrokeColor(unpack(self.color))
       self.grp:insert(curveDisplayObject)
       table.insert(self.grpObjects, curveDisplayObject)
     end
     for n = 1, #arr do
-      local endcap = display.newCircle(self.grp, arr[n].x, arr[n].y, dim.Q10)
+      local endcap = display.newCircle(self.grp, arr[n].x, arr[n].y, capRadius)
       endcap:setFillColor(unpack(self.color))
       table.insert(self.grpObjects, endcap)
     end

@@ -1,1 +1,1 @@
-xcopy /d *.* C:\Users\oddst\Dropbox\SnowLoops
+xcopy /d *.* C:\Users\oddst\Dropbox\MyNet

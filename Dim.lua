@@ -13,9 +13,12 @@ Dim = {
   H50 = nil,
   H25 = nil,
 
+  Q50 = nil,
   Q33 = nil,
-  Q10 = nil,
   Q20 = nil,
+  Q16 = nil,
+  Q10 = nil,
+  Q8 = nil,
 
   NORTHEAST = 1,
   EAST = 2,
@@ -53,9 +56,12 @@ function Dim:new(Q)
   o.H50 = math.floor(o.H*0.5)
   o.H25 = math.floor(o.H*0.25)
   
+  o.Q50 = math.floor(Q/2)
   o.Q33 = math.floor(Q/3.333333)
-  o.Q10 = math.floor(Q/10)
   o.Q20 = math.floor(Q/5)
+  o.Q16 = math.floor(Q*0.16)
+  o.Q10 = math.floor(Q/10)
+  o.Q8 = math.floor(Q*0.08)
 
   -- https://gamedev.stackexchange.com/questions/18340/get-position-of-point-on-circumference-of-circle-given-an-angle
   local apothem = Q * math.cos(30 * math.pi / 180)  --  0.86602529158357

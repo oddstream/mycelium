@@ -27,7 +27,7 @@ function scene:show(event)
     local cir = display.newCircle(sceneGroup, x, y, 210)
     cir:setFillColor(0.2, 0.2, 0.2)
 
-    y = display.contentCenterY - 110
+    y = display.contentCenterY - 120
     logo = display.newImage(sceneGroup, 'oddstream logo.png', system.ResourceDirectory, x, y)
 
     assert(logo:addEventListener('tap', gotoDestination))

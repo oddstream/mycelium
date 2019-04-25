@@ -1,11 +1,11 @@
--- SnowLoops.lua
+-- MyNet.lua
 
 local Dim = require 'Dim'
 local Grid = require 'Grid'
 
 local physics = require 'physics'
 physics.start()
-physics.setGravity(0, 0.98)
+physics.setGravity(0, 0)  -- 9.8
 print(physics.engineVersion)
 
 local composer = require('composer')
@@ -20,15 +20,17 @@ local gameLoopTimer = nil
 local grid = nil
 
 local function createAsteroid()
-  local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), 0, math.random(10))
+  -- local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), 0, math.random(10))
+  local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), math.random(display.contentHeight), math.random(10))
   if grid.complete then
     newAsteroid:setFillColor(1,1,1)
   else
     newAsteroid:setFillColor(0.2,0.2,0.2)
   end
   table.insert(asteroidsTable, newAsteroid)
-  physics.addBody(newAsteroid, 'dynamic', { density=0.5, radius=10, bounce=0.9 } )
-  newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( 0,100 ) )
+  physics.addBody(newAsteroid, 'dynamic', { density=0.3, radius=10, bounce=0.9 } )
+  -- newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( 0,100 ) )
+  newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
   -- newAsteroid:applyTorque( math.random( -10,10 ) )
 end
 
@@ -71,7 +73,7 @@ function scene:create(event)
   sceneGroup:insert(shapesGroup)
 
   local numX = 5
-  local numY = 10
+  local numY = (numX*2) - 1  -- odd number for mirror
 
   -- each cell is Q * math.sqrt(3) wide
   -- we need space for numX + a half
@@ -111,7 +113,7 @@ function scene:hide(event)
     if gameLoopTimer then timer.cancel(gameLoopTimer) end
   elseif phase == 'did' then
     -- Code here runs immediately after the scene goes entirely off screen
-    composer.removeScene('Filigree')
+    composer.removeScene('MyNet')
   end
 end
 

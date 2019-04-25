@@ -163,17 +163,18 @@ end
 function Grid:placeCoins()
   local dim = dimensions
 
-  -- self:iterator(function(c) c:placeCoin() end)
-
-  local yS = self.height
-  for yN = 1, self.height/2 do
-    for x = 1, self.width do
-      local cN = self:findCell(x,yN)
-      local cS = self:findCell(x,yS)
-      cN:placeCoin(cS)
-      -- cN:placeCoin()
+  if math.random() < 0.5 then
+    self:iterator(function(c) c:placeCoin() end)
+  else
+    local yS = self.height
+    for yN = 1, self.height/2 do
+      for x = 1, self.width do
+        local cN = self:findCell(x,yN)
+        local cS = self:findCell(x,yS)
+        cN:placeCoin(cS)
+      end
+      yS = yS - 1
     end
-    yS = yS - 1
   end
 end
 
@@ -224,7 +225,7 @@ function Grid:colorCoins()
   local colorsAll = {
     colorsGreen,
     colorsBlue,
-    colorsOrange,
+    -- colorsOrange,
     -- colorsPink,
     colorsGray,
   }

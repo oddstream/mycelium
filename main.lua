@@ -16,7 +16,7 @@ print('maxTextureSize', system.getInfo('maxTextureSize'))
 print('model', system.getInfo('model'))
 print('environment', system.getInfo('environment'))
 
-native.setProperty('windowTitleText', 'Snow Loops') -- Win32
+native.setProperty('windowTitleText', 'Mycelium Network') -- Win32
 
 math.randomseed(os.time())
 
@@ -75,4 +75,4 @@ if not table.filter then
 end
 print('table filter', type(table.filter))
 
-composer.gotoScene('Splash', {effect='fade', params={scene='SnowLoops'}})
+composer.gotoScene('Splash', {effect='fade', params={scene='MyNet'}})

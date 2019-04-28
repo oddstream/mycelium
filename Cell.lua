@@ -19,12 +19,14 @@ Cell = {
   coins = 0,
   hw = 0,     -- hammingWeight
 
-  color = nil,  -- e.g. {0,1,0}
+  color = nil,       -- e.g. {0,1,0}
   hexagon = nil,     -- ShapeObject for outline
-  section = nil,
+  section = nil,     -- number of section (0 if locked)
 
-  grp = nil,  -- group to put shapes in
-  grpObjects = nil,
+  grp = nil,        -- display group to put shapes in
+  grpObjects = nil, -- list of ShapeObject for coloring
+
+  touchCoords = nil,
 }
 
 function Cell:new(grid, x, y)
@@ -59,6 +61,7 @@ function Cell:new(grid, x, y)
   end
 
   o.hexagon:addEventListener('tap', o) -- table listener
+  -- o.hexagon:addEventListener('touch', o) -- table listener
 
   return o
 end
@@ -87,7 +90,7 @@ function Cell:calcHammingWeight()
     return w
   end
   
-  self.hw = hammingWeight(self.coins)
+  self.bitCount = hammingWeight(self.coins)
 end
 
 function Cell:shiftBits(num)
@@ -182,13 +185,14 @@ function Cell:colorComplete()
   Groups automatically detect when a child's properties have changed 
   (position, rotation, etc.). Thus, on the next render pass, the child will re-render.
 ]]
+  self.color = {0.8,0.8,0.8}
   if self.grpObjects then
     for _, o in ipairs(self.grpObjects) do
       if o.setStrokeColor then
-        o:setStrokeColor(0.8,0.8,0.8)
+        o:setStrokeColor(unpack(self.color))
       end
       if o.setFillColor then
-        o:setFillColor(0.8,0.8,0.8)
+        o:setFillColor(unpack(self.color))
       end
     end
   end
@@ -198,16 +202,15 @@ function Cell:tap(event)
   local dim = dimensions
 
   -- implement table listener for tap events
-  -- print('tap', event.numTaps, self.x, self.y, self.coins, self.hw)
+  -- print('tap', event.numTaps, self.x, self.y, self.coins, self.bitCount)
 
   local function afterRotate()
     self:createGraphics()
-    if self.grid:isSectionComplete(self.section) then
-      self.grid:sound('section')
-    end
     if self.grid:isComplete() then
       self.grid:sound('complete')
       self.grid:colorComplete()
+    elseif self.grid:isSectionComplete(self.section) then
+      self.grid:sound('section')
     end
   end
 --[[
@@ -215,14 +218,11 @@ function Cell:tap(event)
     if not self[cd.link] then print(self.x, self.y, 'no link to', cd.link) end
   end
 ]]
-  if self.grid:isComplete() then
-    self.grid:reset() -- TODO transition this somehow, it's too abrupt
-  elseif self.section == 0 then
+  if self.section == 0 then
     self.grid:sound('locked')
   elseif self.grp then
     self.grid:sound('tap')
-    -- shift bits now (rather than in afterRotate()) in case another tap comes along
-    -- while we are animating
+    -- shift bits now (rather than in afterRotate) in case another tap happens while animating
     self:shiftBits()
     -- self.grp.anchorChildren = true
     -- self.grp.anchorX = 0
@@ -236,6 +236,66 @@ function Cell:tap(event)
   return true
 end
 
+local function isPointInTriangle(px,py,ax,ay,bx,by,cx,cy)
+  assert(type(ax)=='number')
+  assert(type(ay)=='number')
+  assert(type(bx)=='number')
+  assert(type(by)=='number')
+  assert(type(cx)=='number')
+  assert(type(cy)=='number')
+  local v0 = {cx-ax,cy-ay}
+  local v1 = {bx-ax,by-ay}
+  local v2 = {px-ax,py-ay}
+
+  local dot00 = (v0[1]*v0[1]) + (v0[2]*v0[2]);
+  local dot01 = (v0[1]*v1[1]) + (v0[2]*v1[2]);
+  local dot02 = (v0[1]*v2[1]) + (v0[2]*v2[2]);
+  local dot11 = (v1[1]*v1[1]) + (v1[2]*v1[2]);
+  local dot12 = (v1[1]*v2[1]) + (v1[2]*v2[2]);
+
+  local invDenom = 1 / (dot00 * dot11 - dot01 * dot01)
+
+  local u = (dot11 * dot02 - dot01 * dot12) * invDenom
+  local v = (dot00 * dot12 - dot01 * dot02) * invDenom
+
+  return ((u >= 0) and (v >= 0) and (u + v < 1))
+end
+
+--[[
+function Cell:touch(event)
+  local dim = dimensions
+
+  print(event.phase, event.x, event.y)
+
+  if event.phase == 'began' and not self.touchCoords then
+    -- building these as needed, and keeping them because they won't change
+    self.touchCoords = {}
+    for i = 1, 6 do
+      local src = dim.cellTriangles[i]
+      local dst = {}
+      dst[1] = self.center.x
+      dst[2] = self.center.y
+      dst[3] = src[3] * 3 + self.center.x
+      dst[4] = src[4] * 3 + self.center.y
+      dst[5] = src[5] * 3 + self.center.x
+      dst[6] = src[6] * 3 + self.center.y
+      table.insert(self.touchCoords, dst)
+    end
+  end
+
+  if not self.touchCoords then
+    -- we began in a different cell
+    return false
+  end
+
+  for i = 1, 6 do
+    if isPointInTriangle(event.x, event.y, unpack(self.touchCoords[i])) then
+      print(event.phase, 'in triangle', i)
+    end
+  end
+
+end
+]]
 function Cell:createGraphics()
   local dim = dimensions
 
@@ -260,7 +320,7 @@ function Cell:createGraphics()
   local sWidth = dim.Q16
   local capRadius = math.floor(sWidth/2)
 
-  if self.hw == 1 then
+  if self.bitCount == 1 then
     local cd = table.find(dim.cellData, function(b) return self.coins == b.bit end)
     assert(cd)
     local line = display.newLine(self.grp,
@@ -323,7 +383,7 @@ function Cell:createGraphics()
       end
     end
     -- close path for better aesthetics
-    if self.hw > 3 then
+    if self.bitCount > 3 then
       table.insert(arr, arr[1])
     end
     assert(#arr > 1)

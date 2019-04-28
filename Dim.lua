@@ -30,8 +30,8 @@ Dim = {
   MASK = 63,
 
   cellData = nil,
-  snowflakeLines = nil,
-  snowflakeHex = nil,
+  -- snowflakeLines = nil,
+  -- snowflakeHex = nil,
   cellHex = nil,
 }
 
@@ -80,7 +80,7 @@ function Dim:new(Q)
   local apothem50 = Q/2 * math.cos(30 * math.pi / 180)
   local sx = math.floor(math.cos(60 * math.pi / 180) * apothem50)
   local sy = math.floor(math.sin(60 * math.pi / 180) * apothem50)
-
+--[[
   o.snowflakeLines = {
     {x=sx, y=-sy},
     {x=o.W25, y=0},
@@ -98,7 +98,7 @@ function Dim:new(Q)
     -o.W25, 0,
     -sx, -sy,
   }
-
+]]
   o.cellHex = {
     0,-(o.H50),  -- N 1,2
     o.W50,-(o.H25), -- NE 3,4
@@ -107,6 +107,18 @@ function Dim:new(Q)
     -(o.W50),o.H25, -- SW 9,10
     -(o.W50),-(o.H25),  -- NW 11,12
   }
+
+  local x = o.cellHex
+  o.cellTriangles = {
+    {0,0, x[1],x[2], x[3],x[4]}, -- N to NE
+    {0,0, x[3],x[4], x[5],x[6]}, -- NE to SE
+    {0,0, x[5],x[6], x[7],x[8]},
+    {0,0, x[7],x[8], x[9],x[10]},
+    {0,0, x[9],x[10], x[11],x[12]},
+    {0,0, x[11],x[12], x[1],x[2]}
+  }
+
+  assert(#o.cellTriangles==6)
 
   return o
 end

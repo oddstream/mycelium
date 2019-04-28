@@ -11,6 +11,9 @@ print(physics.engineVersion)
 local composer = require('composer')
 local scene = composer.newScene()
 
+local widget = require('widget')
+widget.setTheme('widget_theme_android_holo_dark')
+
 local asteroidsTable = {}
 
 local backGroup, gridGroup, shapesGroup
@@ -18,6 +21,7 @@ local backGroup, gridGroup, shapesGroup
 local gameLoopTimer = nil
 
 local grid = nil
+
 --[[
 local function createAsteroid()
   -- local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), 0, math.random(10))
@@ -34,24 +38,28 @@ local function createAsteroid()
   -- newAsteroid:applyTorque( math.random( -10,10 ) )
 end
 ]]
-local function createAsteroid2(x, y)
+local function createAsteroid2(x, y, color)
   local newAsteroid = display.newCircle(backGroup, x, y, math.random(10))
   table.insert(asteroidsTable, newAsteroid)
   physics.addBody(newAsteroid, 'dynamic', { density=0.3, radius=10, bounce=0.9 } )
   if grid.complete then
-    newAsteroid:setFillColor(1,1,1)
+    newAsteroid:setFillColor(unpack(color))
     newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
   else
-    newAsteroid:setFillColor(0.1,0.1,0.1)
+    newAsteroid:setFillColor(unpack(color))
     newAsteroid:setLinearVelocity( math.random( -25,25 ), math.random( -25,25 ) )
   end
 end
 
 local function gameLoop()
 
+  if not grid.complete and math.random() < 0.9 then
+    return
+  end
+
   grid:iterator(function(c)
-    if c.hw == 1 then
-      createAsteroid2(c.center.x, c.center.y)
+    if c.bitCount == 1 then
+      createAsteroid2(c.center.x, c.center.y, c.color)
     end
   end)
 
@@ -109,6 +117,22 @@ function scene:create(event)
   grid:colorCoins()
   grid:jumbleCoins()
   grid:createGraphics()
+
+  local resetButton = widget.newButton({
+    id = 'reset',
+    x = display.contentCenterX,
+    y = display.contentHeight - 100,
+    onRelease = function() grid:reset() end,
+    label = 'reset',
+    labelColor = { default={0,0,0}, over={0,0,0} },
+    font = native.SystemFontBold,
+    fontSize = 36,
+
+    shape = 'circle',
+    radius = 50,
+    fillColor = { default={0.8,0.8,0.8}, over={0.5,0.5,0.5} }
+  })
+  sceneGroup:insert(resetButton)
 end
 
 function scene:show(event)
@@ -117,7 +141,7 @@ function scene:show(event)
 
   if phase == 'will' then
     -- Code here runs when the scene is still off screen (but is about to come on screen)
-    gameLoopTimer = timer.performWithDelay(3000, gameLoop, 0)
+    gameLoopTimer = timer.performWithDelay(1000, gameLoop, 0)
   elseif phase == 'did' then
     -- Code here runs when the scene is entirely on screen
   end

@@ -176,6 +176,8 @@ function Grid:placeCoins()
       yS = yS - 1
     end
   end
+
+  self:iterator(function(c) c:calcHammingWeight() end)
 end
 
 function Grid:colorCoins()

@@ -8,17 +8,6 @@ local bezier = require('Bezier')
 local PLACE_COIN_CHANCE = 0.3333 / 2
 local SHOW_HEXAGON = true
 
-local function hammingWeight(coin)
-  local w = 0
-  for dir = 1, 6 do
-    if bit.band(coin, 1) == 1 then
-      w = w + 1
-    end
-    coin = bit.rshift(coin, 1)
-  end
-  return w
-end
-
 Cell = {
   -- prototype object
   grid = nil,      -- grid we belong to
@@ -28,6 +17,7 @@ Cell = {
 
   ne, e, se, sw, w, nw = nil, nil, nil, nil, nil, nil,
   coins = 0,
+  hw = 0,     -- hammingWeight
 
   color = nil,  -- e.g. {0,1,0}
   hexagon = nil,     -- ShapeObject for outline
@@ -83,6 +73,21 @@ function Cell:reset()
   if self.grpObjects then
     self.grpObjects = nil
   end
+end
+
+function Cell:calcHammingWeight()
+  local function hammingWeight(coin)
+    local w = 0
+    for dir = 1, 6 do
+      if bit.band(coin, 1) == 1 then
+        w = w + 1
+      end
+      coin = bit.rshift(coin, 1)
+    end
+    return w
+  end
+  
+  self.hw = hammingWeight(self.coins)
 end
 
 function Cell:shiftBits(num)
@@ -191,11 +196,11 @@ end
 
 function Cell:tap(event)
   local dim = dimensions
+
   -- implement table listener for tap events
-  -- print('tap', self.x, self.y, self.coins, hammingWeight(self.coins))
+  -- print('tap', event.numTaps, self.x, self.y, self.coins, self.hw)
 
   local function afterRotate()
-    self:shiftBits()
     self:createGraphics()
     if self.grid:isSectionComplete(self.section) then
       self.grid:sound('section')
@@ -211,11 +216,14 @@ function Cell:tap(event)
   end
 ]]
   if self.grid:isComplete() then
-    self.grid:reset()
+    self.grid:reset() -- TODO transition this somehow, it's too abrupt
   elseif self.section == 0 then
     self.grid:sound('locked')
   elseif self.grp then
     self.grid:sound('tap')
+    -- shift bits now (rather than in afterRotate()) in case another tap comes along
+    -- while we are animating
+    self:shiftBits()
     -- self.grp.anchorChildren = true
     -- self.grp.anchorX = 0
     -- self.grp.anchorY = 0
@@ -225,6 +233,7 @@ function Cell:tap(event)
       onComplete = afterRotate,
     })
   end
+  return true
 end
 
 function Cell:createGraphics()
@@ -251,8 +260,7 @@ function Cell:createGraphics()
   local sWidth = dim.Q16
   local capRadius = math.floor(sWidth/2)
 
-  local bitCount = hammingWeight(self.coins)
-  if bitCount == 1 then
+  if self.hw == 1 then
     local cd = table.find(dim.cellData, function(b) return self.coins == b.bit end)
     assert(cd)
     local line = display.newLine(self.grp,
@@ -315,7 +323,7 @@ function Cell:createGraphics()
       end
     end
     -- close path for better aesthetics
-    if bitCount > 3 then
+    if self.hw > 3 then
       table.insert(arr, arr[1])
     end
     assert(#arr > 1)
@@ -324,7 +332,8 @@ function Cell:createGraphics()
     --   arr[2].x, arr[2].y)
     for n = 1, #arr-1 do
     -- use (off-)center and (off-)center as control points
-      local av = 1.8  -- make the three-edges circles round
+      -- local av = 1.8  -- make the three-edges circles round
+      local av = 3  -- make the three-edges circles triangular
       local cp1 = {x=(arr[n].x)/av, y=(arr[n].y)/av}
       local cp2 = {x=(arr[n+1].x)/av, y=(arr[n+1].y)/av}
       local curve = bezier.new(

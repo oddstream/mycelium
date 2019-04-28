@@ -75,4 +75,4 @@ if not table.filter then
 end
 print('table filter', type(table.filter))
 
-composer.gotoScene('Splash', {effect='fade', params={scene='MyNet'}})
+composer.gotoScene('Splash', {effect='fade', params={scene='Mycelium'}})

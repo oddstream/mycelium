@@ -18,7 +18,7 @@ local backGroup, gridGroup, shapesGroup
 local gameLoopTimer = nil
 
 local grid = nil
-
+--[[
 local function createAsteroid()
   -- local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), 0, math.random(10))
   local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), math.random(display.contentHeight), math.random(10))
@@ -33,26 +33,45 @@ local function createAsteroid()
   newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
   -- newAsteroid:applyTorque( math.random( -10,10 ) )
 end
+]]
+local function createAsteroid2(x, y)
+  local newAsteroid = display.newCircle(backGroup, x, y, math.random(10))
+  table.insert(asteroidsTable, newAsteroid)
+  physics.addBody(newAsteroid, 'dynamic', { density=0.3, radius=10, bounce=0.9 } )
+  if grid.complete then
+    newAsteroid:setFillColor(1,1,1)
+    newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
+  else
+    newAsteroid:setFillColor(0.1,0.1,0.1)
+    newAsteroid:setLinearVelocity( math.random( -25,25 ), math.random( -25,25 ) )
+  end
+end
 
 local function gameLoop()
- 
-  -- Create new asteroid
-  if grid.complete then
-    for a = 1, 3 do
-      createAsteroid()
+
+  grid:iterator(function(c)
+    if c.hw == 1 then
+      createAsteroid2(c.center.x, c.center.y)
     end
-  else
-    createAsteroid()
-  end
+  end)
+
+  -- -- Create new asteroid
+  -- if grid.complete then
+  --   for a = 1, 3 do
+  --     createAsteroid()
+  --   end
+  -- else
+  --   createAsteroid()
+  -- end
 
   -- Remove asteroids which have drifted off screen
   for i = #asteroidsTable, 1, -1 do
     local thisAsteroid = asteroidsTable[i]
 
-    if ( thisAsteroid.x < -100 or
-       thisAsteroid.x > display.contentWidth + 100 or
-       thisAsteroid.y < -100 or
-       thisAsteroid.y > display.contentHeight + 100 )
+    if ( thisAsteroid.x < 0 or
+       thisAsteroid.x > display.contentWidth or
+       thisAsteroid.y < 0 or
+       thisAsteroid.y > display.contentHeight )
     then
       display.remove( thisAsteroid )
       table.remove( asteroidsTable, i )
@@ -98,7 +117,7 @@ function scene:show(event)
 
   if phase == 'will' then
     -- Code here runs when the scene is still off screen (but is about to come on screen)
-    gameLoopTimer = timer.performWithDelay(400, gameLoop, 0)
+    gameLoopTimer = timer.performWithDelay(3000, gameLoop, 0)
   elseif phase == 'did' then
     -- Code here runs when the scene is entirely on screen
   end

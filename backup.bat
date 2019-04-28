@@ -1,1 +1,1 @@
-xcopy /d *.* C:\Users\oddst\Dropbox\MyNet
+xcopy /d *.* C:\Users\oddst\Dropbox\Mycelium

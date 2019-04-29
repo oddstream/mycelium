@@ -61,7 +61,7 @@ function Cell:new(grid, x, y)
   end
 
   o.hexagon:addEventListener('tap', o) -- table listener
-  -- o.hexagon:addEventListener('touch', o) -- table listener
+  o.hexagon:addEventListener('touch', o) -- table listener
 
   return o
 end
@@ -98,7 +98,7 @@ function Cell:shiftBits(num)
 
   num = num or 1
   while num > 0 do
-    if bit.band(self.coins, dim.NORTHWEST) == dim.NORTHWEST then
+    if bit.band(self.coins, 32) == 32 then
       -- high bit is set
       self.coins = bit.lshift(self.coins, 1)
       self.coins = bit.band(self.coins, dim.MASK)
@@ -106,6 +106,30 @@ function Cell:shiftBits(num)
     else
       self.coins = bit.lshift(self.coins, 1)
     end
+    num = num - 1
+  end
+end
+
+function Cell:unshiftBits(num)
+  local function unshift(n)
+    if bit.band(n, 1) == 1 then
+      n = bit.rshift(n, 1)
+      n = bit.bor(n , 32)
+    else
+      n = bit.rshift(n, 1)
+    end
+    return n
+  end
+
+  assert(unshift(1) == 32)
+  assert(unshift(2) == 1)
+  assert(unshift(4) == 2)
+  assert(unshift(32) == 16)
+  assert(unshift(63) == 63)
+
+  num = num or 1
+  while num > 0 do
+    self.coins = unshift(self.coins)
     num = num - 1
   end
 end
@@ -158,7 +182,7 @@ function Cell:placeCoin(mirror)
 end
 
 function Cell:jumbleCoin()
-  self:shiftBits(math.random(5))
+  self:unshiftBits(math.random(5))
 end
 
 function Cell:colorConnected(color, section)
@@ -185,7 +209,7 @@ function Cell:colorComplete()
   Groups automatically detect when a child's properties have changed 
   (position, rotation, etc.). Thus, on the next render pass, the child will re-render.
 ]]
-  self.color = {0.8,0.8,0.8}
+  self.color = {1,1,1}
   if self.grpObjects then
     for _, o in ipairs(self.grpObjects) do
       if o.setStrokeColor then
@@ -198,51 +222,61 @@ function Cell:colorComplete()
   end
 end
 
+function Cell:rotate(dir)
+  local dim = dimensions
+
+  local function afterRotate()
+    self:createGraphics()
+    if self.grid:isSectionComplete(self.section) then
+      self.grid:sound('section')
+    end
+    if self.grid:isComplete() then
+      self.grid:sound('complete')
+      self.grid:colorComplete()
+    end
+  end
+
+  dir = dir or 'clockwise'
+
+  if self.section == 0 then
+    self.grid:sound('locked')
+  elseif self.grp then
+    self.grid:sound('tap')
+    -- shift bits now (rather than in afterRotate) in case another tap happens while animating
+    local degrees
+    if dir == 'clockwise' then
+      self:shiftBits()
+      degrees = 45
+    elseif dir == 'anticlockwise' then
+      self:unshiftBits()
+      degrees = -45
+    end
+
+    transition.to(self.grp, {
+      time = 100,
+      rotation = degrees,
+      onComplete = afterRotate,
+    })
+  end
+end
+
 function Cell:tap(event)
   local dim = dimensions
 
   -- implement table listener for tap events
   -- print('tap', event.numTaps, self.x, self.y, self.coins, self.bitCount)
 
-  local function afterRotate()
-    self:createGraphics()
-    if self.grid:isComplete() then
-      self.grid:sound('complete')
-      self.grid:colorComplete()
-    elseif self.grid:isSectionComplete(self.section) then
-      self.grid:sound('section')
-    end
-  end
---[[
-  for _,cd in ipairs(dim.cellData) do
-    if not self[cd.link] then print(self.x, self.y, 'no link to', cd.link) end
-  end
-]]
-  if self.section == 0 then
-    self.grid:sound('locked')
-  elseif self.grp then
-    self.grid:sound('tap')
-    -- shift bits now (rather than in afterRotate) in case another tap happens while animating
-    self:shiftBits()
-    -- self.grp.anchorChildren = true
-    -- self.grp.anchorX = 0
-    -- self.grp.anchorY = 0
-    transition.to(self.grp, {
-      time = 100,
-      rotation = 45,  -- enough to give illusion, no need for full 60 degrees
-      onComplete = afterRotate,
-    })
-  end
+  self:rotate('clockwise')
   return true
 end
 
 local function isPointInTriangle(px,py,ax,ay,bx,by,cx,cy)
-  assert(type(ax)=='number')
-  assert(type(ay)=='number')
-  assert(type(bx)=='number')
-  assert(type(by)=='number')
-  assert(type(cx)=='number')
-  assert(type(cy)=='number')
+  -- assert(type(ax)=='number')
+  -- assert(type(ay)=='number')
+  -- assert(type(bx)=='number')
+  -- assert(type(by)=='number')
+  -- assert(type(cx)=='number')
+  -- assert(type(cy)=='number')
   local v0 = {cx-ax,cy-ay}
   local v1 = {bx-ax,by-ay}
   local v2 = {px-ax,py-ay}
@@ -261,26 +295,27 @@ local function isPointInTriangle(px,py,ax,ay,bx,by,cx,cy)
   return ((u >= 0) and (v >= 0) and (u + v < 1))
 end
 
---[[
 function Cell:touch(event)
   local dim = dimensions
 
-  print(event.phase, event.x, event.y)
+  -- print(event.phase, event.x, event.y)
 
-  if event.phase == 'began' and not self.touchCoords then
-    -- building these as needed, and keeping them because they won't change
+  if event.phase == 'began' then
+    -- building these as needed, the touched cell has these coords
     self.touchCoords = {}
     for i = 1, 6 do
       local src = dim.cellTriangles[i]
       local dst = {}
       dst[1] = self.center.x
       dst[2] = self.center.y
-      dst[3] = src[3] * 3 + self.center.x
-      dst[4] = src[4] * 3 + self.center.y
-      dst[5] = src[5] * 3 + self.center.x
-      dst[6] = src[6] * 3 + self.center.y
+      dst[3] = src[3] + self.center.x
+      dst[4] = src[4] + self.center.y
+      dst[5] = src[5] + self.center.x
+      dst[6] = src[6] + self.center.y
       table.insert(self.touchCoords, dst)
+      -- assert(#dst==6)
     end
+
   end
 
   if not self.touchCoords then
@@ -290,12 +325,35 @@ function Cell:touch(event)
 
   for i = 1, 6 do
     if isPointInTriangle(event.x, event.y, unpack(self.touchCoords[i])) then
-      print(event.phase, 'in triangle', i)
+      -- print(event.phase, 'in triangle', i)
+      -- local c = dim.cellTriangles[i]
+      -- local tri1 = display.newLine(self.grp, 0,0, c[3], c[4])
+      -- tri1.strokeWidth = 2
+      -- local tri2 = display.newLine(self.grp, 0,0, c[5], c[6])
+      -- tri2.strokeWidth = 2
+
+      if event.phase == 'began' then
+        self.touchPos = i
+      elseif event.phase == 'moved' and self.touchPos then
+        if (i == self.touchPos + 1) or (self.touchPos == 6 and i == 1) then
+          self:rotate('clockwise')
+          self.touchPos = i
+        elseif (i == self.touchPos - 1) or (self.touchPos == 1 and i == 6) then
+          self:rotate('anticlockwise')
+          self.touchPos = i
+        end
+      end
+      break
     end
   end
 
+  if event.phase == 'ended' then
+    self.touchCoords = nil
+    self.touchPos = nil
+  end
+
 end
-]]
+
 function Cell:createGraphics()
   local dim = dimensions
 

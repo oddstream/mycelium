@@ -22,6 +22,27 @@ local gameLoopTimer = nil
 
 local grid = nil
 
+local sheetOptions =
+{
+  frames =
+  {
+    { -- 1 autorenew
+      x = 0,
+      y = 0,
+      width = 100,
+      height = 100
+    },
+    { -- 2 blank
+      x = 0,
+      y = 100,
+      width = 100,
+      height = 100
+    },
+  }
+}
+
+local imageSheet = graphics.newImageSheet('icons.png', sheetOptions)
+
 --[[
 local function createAsteroid()
   -- local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), 0, math.random(10))
@@ -118,21 +139,17 @@ function scene:create(event)
   grid:jumbleCoins()
   grid:createGraphics()
 
-  local resetButton = widget.newButton({
-    id = 'reset',
+  local newButton = widget.newButton({
+    id = 'new',
     x = display.contentCenterX,
     y = display.contentHeight - 100,
     onRelease = function() grid:reset() end,
-    label = 'reset',
-    labelColor = { default={0,0,0}, over={0,0,0} },
-    font = native.SystemFontBold,
-    fontSize = 36,
 
-    shape = 'circle',
-    radius = 50,
-    fillColor = { default={0.8,0.8,0.8}, over={0.5,0.5,0.5} }
+    sheet = imageSheet,
+    defaultFrame = 1,
+    overFrame = 2,
   })
-  sceneGroup:insert(resetButton)
+  sceneGroup:insert(newButton)
 end
 
 function scene:show(event)

@@ -43,33 +43,16 @@ local sheetOptions =
 
 local imageSheet = graphics.newImageSheet('icons.png', sheetOptions)
 
---[[
-local function createAsteroid()
-  -- local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), 0, math.random(10))
-  local newAsteroid = display.newCircle(backGroup, math.random(display.contentWidth), math.random(display.contentHeight), math.random(10))
-  if grid.complete then
-    newAsteroid:setFillColor(1,1,1)
-  else
-    newAsteroid:setFillColor(0.2,0.2,0.2)
-  end
-  table.insert(asteroidsTable, newAsteroid)
-  physics.addBody(newAsteroid, 'dynamic', { density=0.3, radius=10, bounce=0.9 } )
-  -- newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( 0,100 ) )
-  newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
-  -- newAsteroid:applyTorque( math.random( -10,10 ) )
-end
-]]
 local function createAsteroid2(x, y, color)
   local newAsteroid = display.newCircle(backGroup, x, y, math.random(10))
   table.insert(asteroidsTable, newAsteroid)
   physics.addBody(newAsteroid, 'dynamic', { density=0.3, radius=10, bounce=0.9 } )
   if grid.complete then
-    newAsteroid:setFillColor(unpack(color))
     newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
   else
-    newAsteroid:setFillColor(unpack(color))
     newAsteroid:setLinearVelocity( math.random( -25,25 ), math.random( -25,25 ) )
   end
+  newAsteroid:setFillColor(unpack(color))
 end
 
 local function gameLoop()
@@ -83,15 +66,6 @@ local function gameLoop()
       createAsteroid2(c.center.x, c.center.y, c.color)
     end
   end)
-
-  -- -- Create new asteroid
-  -- if grid.complete then
-  --   for a = 1, 3 do
-  --     createAsteroid()
-  --   end
-  -- else
-  --   createAsteroid()
-  -- end
 
   -- Remove asteroids which have drifted off screen
   for i = #asteroidsTable, 1, -1 do

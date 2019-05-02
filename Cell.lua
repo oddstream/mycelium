@@ -434,6 +434,18 @@ function Cell:createGraphics()
     end
     ]]
     -- make a list of edge coords we need to visit
+
+--[[
+  with self.bitCount > 3
+  three consective bits should produce same pattern (rotated) no matter where they occur in coins:
+    000111
+    001110
+    011100
+    111000
+    110001 - ugly
+    100011 - ugly
+  hence self.bitCount > 2
+]]
     local arr = {}
     for _,cd in ipairs(dim.cellData) do
       if bit.band(self.coins, cd.bit) == cd.bit then
@@ -441,13 +453,10 @@ function Cell:createGraphics()
       end
     end
     -- close path for better aesthetics
-    if self.bitCount > 3 then
+    if self.bitCount > 2 then
       table.insert(arr, arr[1])
     end
-    assert(#arr > 1)
-    -- print(
-    --   arr[1].x, arr[1].y, 
-    --   arr[2].x, arr[2].y)
+
     for n = 1, #arr-1 do
     -- use (off-)center and (off-)center as control points
       -- local av = 1.8  -- make the three-edges circles round

@@ -107,17 +107,21 @@ function scene:create(event)
   -- display.setDefault('background', 0.5,0.5,0.5)
 
   grid = Grid:new(gridGroup, shapesGroup, numX, numY)
-  grid:linkCells2()
-  grid:placeCoins()
-  grid:colorCoins()
-  grid:jumbleCoins()
-  grid:createGraphics()
+
+  grid:newLevel()
+
+  local function gridReset()
+    grid:reset() -- calls fadeIn()
+  end
 
   local newButton = widget.newButton({
     id = 'new',
     x = display.contentCenterX,
     y = display.contentHeight - 100,
-    onRelease = function() grid:reset() end,
+    onRelease = function()
+      grid:fadeOut() 
+      timer.performWithDelay(1000, gridReset, 1)
+    end,
 
     sheet = imageSheet,
     defaultFrame = 1,

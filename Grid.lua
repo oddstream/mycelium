@@ -39,6 +39,8 @@ function Grid:new(gridGroup, shapesGroup, width, height)
     end
   end
 
+  o:linkCells2()
+
   complete = false
 
   o.tapSound = audio.loadSound('sound56.wav')
@@ -67,10 +69,16 @@ function Grid:reset()
     composer.setVariable('last_using', after)
   end
 
+  self:newLevel()
+end
+
+function Grid:newLevel()
   self:placeCoins()
   self:colorCoins()
   self:jumbleCoins()
-  self:createGraphics()
+  self:createGraphics(0)
+
+  self:fadeIn()
 
   self.complete = false
 end
@@ -157,7 +165,7 @@ function Grid:randomCell()
 end
 
 function Grid:createGraphics()
-  self:iterator(function(c) c:createGraphics() end)
+  self:iterator(function(c) c:createGraphics(0) end)
 end
 
 function Grid:placeCoins()
@@ -281,6 +289,14 @@ end
 
 function Grid:colorComplete()
   self:iterator( function(c) c:colorComplete() end )
+end
+
+function Grid:fadeIn()
+  self:iterator( function(c) c:fadeIn() end )
+end
+
+function Grid:fadeOut()
+  self:iterator( function(c) c:fadeOut() end )
 end
 
 function Grid:destroy()

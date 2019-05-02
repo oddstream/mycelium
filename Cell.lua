@@ -226,7 +226,7 @@ function Cell:rotate(dir)
   local dim = dimensions
 
   local function afterRotate()
-    self:createGraphics()
+    self:createGraphics(1)
     if self.grid:isSectionComplete(self.section) then
       self.grid:sound('section')
     end
@@ -354,13 +354,26 @@ function Cell:touch(event)
 
 end
 
-function Cell:createGraphics()
+function Cell:createGraphics(alpha) -- TODO alpha
   local dim = dimensions
+
+  alpha = alpha or 1.0
 
   if 0 == self.coins then
     return
   end
 
+  -- gotcha the 4th argument to set color function ~= the .alpha property
+  -- blue={0,0,1}
+  -- print(table.unpack(blue), 3)
+  --> 0 6
+--[[
+  local colora = {}
+  for k,v in pairs(self.color) do colora[k] = v end
+  assert(#colora==3)
+  table.insert(colora, alpha)
+  assert(#colora==4)
+]]
   if self.grp then
     self.grp:removeSelf()
     self.grp = nil
@@ -379,6 +392,7 @@ function Cell:createGraphics()
   local capRadius = math.floor(sWidth/2)
 
   if self.bitCount == 1 then
+
     local cd = table.find(dim.cellData, function(b) return self.coins == b.bit end)
     assert(cd)
     local line = display.newLine(self.grp,
@@ -388,37 +402,21 @@ function Cell:createGraphics()
       cd.c2eY)
     line.strokeWidth = sWidth
     line:setStrokeColor(unpack(self.color))
+    line.alpha = alpha
     table.insert(self.grpObjects, line)
 
     local endcap = display.newCircle(self.grp, cd.c2eX, cd.c2eY, capRadius)
     endcap:setFillColor(unpack(self.color))
+    endcap.alpha = alpha
     table.insert(self.grpObjects, endcap)
 
-    -- if math.fmod(self.section,3) == 1 then 
-      local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
-      circle.strokeWidth = sWidth
-      circle:setStrokeColor(unpack(self.color))
-      circle:setFillColor(0,0,0)
-      table.insert(self.grpObjects, circle)
+    local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
+    circle.strokeWidth = sWidth
+    circle:setStrokeColor(unpack(self.color))
+    circle.alpha = alpha
+    circle:setFillColor(0,0,0)
+    table.insert(self.grpObjects, circle)
 
-    -- elseif math.fmod(self.section,3) == 2 then
-    --   for _,sd in ipairs(dim.snowflakeLines) do
-    --     local line = display.newLine(self.grp, 0, 0, sd.x, sd.y)
-    --     line.strokeWidth = sWidth
-    --     line:setStrokeColor(unpack(self.color))
-    --     table.insert(self.grpObjects, line)
-
-    --     local endcap = display.newCircle(self.grp, sd.x, sd.y, capRadius)
-    --     endcap:setFillColor(unpack(self.color))
-    --     table.insert(self.grpObjects, endcap)
-    --   end
-    -- else
-    --   local hexagon = display.newPolygon(self.grp, 0, 0, dim.snowflakeHex)
-    --   hexagon:setFillColor(0,0,0)
-    --   hexagon:setStrokeColor(unpack(self.color))
-    --   hexagon.strokeWidth = sWidth
-    --   table.insert(self.grpObjects, hexagon)
-    -- end
   else
     -- until Bezier curves, just draw a line from coin-bit-edge to center
     --[[
@@ -471,13 +469,31 @@ function Cell:createGraphics()
       local curveDisplayObject = curve:get()
       curveDisplayObject.strokeWidth = sWidth
       curveDisplayObject:setStrokeColor(unpack(self.color))
+      curveDisplayObject.alpha = alpha
       self.grp:insert(curveDisplayObject)
       table.insert(self.grpObjects, curveDisplayObject)
     end
     for n = 1, #arr do
       local endcap = display.newCircle(self.grp, arr[n].x, arr[n].y, capRadius)
       endcap:setFillColor(unpack(self.color))
+      endcap.alpha = alpha
       table.insert(self.grpObjects, endcap)
+    end
+  end
+end
+
+function Cell:fadeIn()
+  if self.grpObjects then
+    for _, o in ipairs(self.grpObjects) do
+      transition.fadeIn(o, {time=500});
+    end
+  end
+end
+
+function Cell:fadeOut()
+  if self.grpObjects then
+    for _, o in ipairs(self.grpObjects) do
+      transition.fadeOut(o, {time=math.random(9)*100});
     end
   end
 end

@@ -42,16 +42,17 @@ print('table find', type(table.find))
 if not table.filter then
   table.filter = function(t, filterIter)
     local out = {}
-  
+
     for k, v in pairs(t) do
       if filterIter(v, k, t) then table.insert(out, v) end
     end
-  
+
     return out
   end
 end
 print('table filter', type(table.filter))
 
+--[[
 if not table.copy then
   function table.copy(t) -- shallow-copy a table
     if type(t) ~= 'table' then return t end
@@ -63,7 +64,9 @@ if not table.copy then
   end
 end
 print('table copy', type(table.copy))
+]]
 
+--[[
 if not table.clone then
   function table.clone(t) -- deep-copy a table
     if type(t) ~= 'table' then return t end
@@ -71,7 +74,7 @@ if not table.clone then
     local target = {}
     for k, v in pairs(t) do 
       if type(v) == 'table' then
-        tarket[k] = clone(v)
+        target[k] = table.clone(v)
       else
         target[k] = v
       end
@@ -81,5 +84,6 @@ if not table.clone then
   end
 end
 print('table clone', type(table.clone))
+]]
 
 composer.gotoScene('Splash', {effect='fade', params={scene='Mycelium'}})

@@ -4,7 +4,7 @@ local composer = require('composer')
 
 local Cell = require 'Cell'
 
-Grid = {
+local Grid = {
   -- prototype object
   gridGroup = nil,
   shapeGroup = nil,
@@ -41,7 +41,7 @@ function Grid:new(gridGroup, shapesGroup, width, height)
 
   o:linkCells2()
 
-  complete = false
+  o.complete = false
 
   o.tapSound = audio.loadSound('sound56.wav')
   o.sectionSound = audio.loadSound('sound63.wav')
@@ -65,7 +65,7 @@ function Grid:reset()
     local before = collectgarbage('count')
     collectgarbage('collect')
     local after = collectgarbage('count')
-    print('collected', math.round(before - after), 'KBytes, using', math.round(after), 'KBytes', 'leaked', after-last_using)
+    print('collected', math.floor(before - after), 'KBytes, using', math.floor(after), 'KBytes', 'leaked', after-last_using)
     composer.setVariable('last_using', after)
   end
 
@@ -97,7 +97,7 @@ end
 
 function Grid:linkCells2()
   for _,c in ipairs(self.cells) do
-    local fc -- found cell
+    -- local fc -- found cell
 
     -- matters if x is odd or even
     -- even x: cells to ne or se will be == x
@@ -111,6 +111,7 @@ function Grid:linkCells2()
     if oddRow then xdiffE = 1 else xdiffE = 0 end -- easterly
     if oddRow then xdiffW = 0 else xdiffW = -1 end -- westerly
 
+--[[
     fc = self:findCell(c.x + xdiffE, c.y - 1)
     if fc then
       c.ne = fc
@@ -140,6 +141,13 @@ function Grid:linkCells2()
     if fc then
       c.nw = fc
     end
+]]
+    c.ne = self:findCell(c.x + xdiffE, c.y - 1)
+    c.e = self:findCell(c.x + 1, c.y)
+    c.se = self:findCell(c.x + xdiffE, c.y + 1)
+    c.sw = self:findCell(c.x + xdiffW, c.y + 1)
+    c.w = self:findCell(c.x - 1, c.y)
+    c.nw = self:findCell(c.x + xdiffW, c.y - 1)
 
   end
 end
@@ -169,8 +177,6 @@ function Grid:createGraphics()
 end
 
 function Grid:placeCoins()
-  local dim = dimensions
-
   if math.random() < 0.5 then
     self:iterator(function(c) c:placeCoin() end)
   else
@@ -200,6 +206,7 @@ function Grid:colorCoins()
     {46,139,87}, -- SeaGreen
     {128,128,128},
   }
+--[[
   local colorsPink = {
     {255,192,203}, -- Pink
     {255,105,180}, -- HotPink
@@ -209,6 +216,7 @@ function Grid:colorCoins()
 
     {238,130,238}, -- Violet
   }
+]]
   local colorsBlue = {
     {25,25,112},
     {65,105,225},
@@ -217,6 +225,7 @@ function Grid:colorCoins()
     {176,196,222},
     {0,0,205},
   }
+--[[
   local colorsOrange = {
     {255,165,0},
     {255,69,0},
@@ -225,6 +234,7 @@ function Grid:colorCoins()
     {255,99,71},
     {128,128,128},
   }
+]]
   local colorsGray = {
     {128,128,128},
     {192,192,192},
@@ -275,7 +285,7 @@ function Grid:isComplete()
 end
 
 function Grid:isSectionComplete(section)
-  arr = table.filter(self.cells, function(c) return c.section == section end)
+  local arr = table.filter(self.cells, function(c) return c.section == section end)
   for n = 1, #arr do
     if not arr[n]:isComplete(section) then
       return false

@@ -1,14 +1,12 @@
 -- Cell class
 
-local composer = require('composer')
-
 local bit = require('plugin.bit')
 local bezier = require('Bezier')
 
 local PLACE_COIN_CHANCE = 0.3333 / 2
 local SHOW_HEXAGON = true
 
-Cell = {
+local Cell = {
   -- prototype object
   grid = nil,      -- grid we belong to
   x = nil,        -- column 1 .. width
@@ -89,7 +87,7 @@ function Cell:calcHammingWeight()
     end
     return w
   end
-  
+
   self.bitCount = hammingWeight(self.coins)
 end
 
@@ -223,8 +221,6 @@ function Cell:colorComplete()
 end
 
 function Cell:rotate(dir)
-  local dim = dimensions
-
   local function afterRotate()
     self:createGraphics(1)
     if self.grid:isSectionComplete(self.section) then
@@ -261,11 +257,8 @@ function Cell:rotate(dir)
 end
 
 function Cell:tap(event)
-  local dim = dimensions
-
   -- implement table listener for tap events
   -- print('tap', event.numTaps, self.x, self.y, self.coins, self.bitCount)
-
   self:rotate('clockwise')
   return true
 end
@@ -473,6 +466,7 @@ function Cell:createGraphics(alpha) -- TODO alpha
       self.grp:insert(curveDisplayObject)
       table.insert(self.grpObjects, curveDisplayObject)
     end
+
     for n = 1, #arr do
       local endcap = display.newCircle(self.grp, arr[n].x, arr[n].y, capRadius)
       endcap:setFillColor(unpack(self.color))

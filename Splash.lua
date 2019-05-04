@@ -7,7 +7,7 @@ local tim = nil
 local logo = nil
 local destination = nil
 
-function gotoDestination(event)
+local function gotoDestination(event)
   composer.gotoScene(destination, {effect='fade'})
   return true -- we handled tap event
 end
@@ -31,12 +31,12 @@ function scene:show(event)
     logo = display.newImage(sceneGroup, 'oddstream logo.png', system.ResourceDirectory, x, y)
 
     assert(logo:addEventListener('tap', gotoDestination))
-  
-    local y = display.contentCenterY
-    local txt1  = display.newText(sceneGroup, 'oddstream', x, y, native.systemFontBold, 72)
+
+    y = display.contentCenterY
+    display.newText(sceneGroup, 'oddstream', x, y, native.systemFontBold, 72)
 
     y = display.contentCenterY + 100
-    local txt2  = display.newText(sceneGroup, 'games', x, y, native.systemFontBold, 72)
+    display.newText(sceneGroup, 'games', x, y, native.systemFontBold, 72)
 
   elseif phase == 'did' then
     destination = event.params.scene

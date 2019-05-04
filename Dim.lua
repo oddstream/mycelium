@@ -1,6 +1,6 @@
 -- Dim.lua
 
-Dim = {
+local Dim = {
   Q = nil,
 
   W = nil,
@@ -26,7 +26,7 @@ Dim = {
   SW = 8,
   WEST = 16,
   NW = 32,
-  
+
   MASK = 63,
 
   cellData = nil,
@@ -50,12 +50,12 @@ function Dim:new(Q)
   o.W75 = math.floor(o.W*0.75)
   o.W50 = math.floor(o.W*0.5)
   o.W25 = math.floor(o.W*0.25)
-  
+
   o.H = 2 * Q
   o.H75 = math.floor(o.H*0.75)
   o.H50 = math.floor(o.H*0.5)
   o.H25 = math.floor(o.H*0.25)
-  
+
   o.Q50 = math.floor(Q/2)
   o.Q33 = math.floor(Q/3.333333)
   o.Q20 = math.floor(Q/5)
@@ -67,7 +67,7 @@ function Dim:new(Q)
   local apothem = Q * math.cos(30 * math.pi / 180)  --  0.86602529158357
   local X60 = math.floor(math.cos(60 * math.pi / 180) * apothem)
   local Y60 = math.floor(math.sin(60 * math.pi / 180) * apothem)
-  
+
   o.cellData = {
     { bit=o.NE,  oppBit=o.SW,   link='ne',  vsym=3,  c2eX=X60,    c2eY=-Y60, },
     { bit=o.EAST,oppBit=o.WEST, link='e',   vsym=2,  c2eX=o.W50,  c2eY=0,    },
@@ -77,28 +77,10 @@ function Dim:new(Q)
     { bit=o.NW,  oppBit=o.SE,   link='nw',  vsym=4,  c2eX=-X60,   c2eY=-Y60, }
   }
 
-  local apothem50 = Q/2 * math.cos(30 * math.pi / 180)
-  local sx = math.floor(math.cos(60 * math.pi / 180) * apothem50)
-  local sy = math.floor(math.sin(60 * math.pi / 180) * apothem50)
---[[
-  o.snowflakeLines = {
-    {x=sx, y=-sy},
-    {x=o.W25, y=0},
-    {x=sx, y=sy},
-    {x=-sx, y=sy},
-    {x=-o.W25, y=0},
-    {x=-sx, y=-sy},
-  }
+  -- local apothem50 = Q/2 * math.cos(30 * math.pi / 180)
+  -- local sx = math.floor(math.cos(60 * math.pi / 180) * apothem50)
+  -- local sy = math.floor(math.sin(60 * math.pi / 180) * apothem50)
 
-  o.snowflakeHex = {
-    sx, -sy,
-    o.W25, 0,
-    sx, sy,
-    -sx, sy,
-    -o.W25, 0,
-    -sx, -sy,
-  }
-]]
   o.cellHex = {
     0,-(o.H50),  -- N 1,2
     o.W50,-(o.H25), -- NE 3,4

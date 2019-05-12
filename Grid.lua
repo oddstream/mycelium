@@ -19,6 +19,9 @@ local Grid = {
   dingSound = nil,
   lockedSound = nil,
 
+  gameState = nil,
+
+  levelText = nil,
   newButton = nil,
 }
 
@@ -81,8 +84,18 @@ function Grid:newLevel()
   self:createGraphics(0)
 
   self:fadeIn()
+
+  self.levelText.text = string.format('#%u', self.gameState.level)
+
   self.newButton:setFillColor(0.1,0.1,0.1)
   self.complete = false
+end
+
+function Grid:advanceLevel()
+  assert(self.gameState)
+  assert(self.gameState.level)
+  self.gameState.level = self.gameState.level + 1
+  self.gameState:write()
 end
 
 function Grid:sound(type)

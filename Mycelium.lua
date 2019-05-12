@@ -2,6 +2,7 @@
 
 local Dim = require 'Dim'
 local Grid = require 'Grid'
+local GameState = require 'GameState'
 
 local physics = require 'physics'
 physics.start()
@@ -32,7 +33,7 @@ local sheetOptions =
       width = 100,
       height = 100
     },
-    { -- 2 blank
+    { -- 2 autorenew rotated
       x = 0,
       y = 100,
       width = 100,
@@ -46,7 +47,7 @@ local imageSheet = graphics.newImageSheet('icons.png', sheetOptions)
 local function createAsteroid2(x, y, color)
   local newAsteroid = display.newCircle(backGroup, x, y, math.random(10))
   table.insert(asteroidsTable, newAsteroid)
-  physics.addBody(newAsteroid, 'dynamic', { density=0.3, radius=10, bounce=0.9 } )
+  physics.addBody(newAsteroid, 'dynamic', { density=0.2, radius=10, bounce=0.9 } )
   if grid.complete then
     newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
   else
@@ -113,6 +114,8 @@ function scene:create(event)
 
   grid = Grid:new(gridGroup, shapesGroup, numX, numY)
 
+  grid.gameState = GameState:new()
+
   local function gridReset()
     grid:reset() -- calls fadeIn()
   end
@@ -132,6 +135,10 @@ function scene:create(event)
   })
   grid.newButton:setFillColor(0.1, 0.1, 0.1)
   sceneGroup:insert(grid.newButton)
+
+  grid.levelText = display.newText(sceneGroup, '', display.contentWidth, display.contentHeight - 100, native.systemFontBold, 72)
+  grid.levelText.anchorX = 1  -- align right
+  grid.levelText:setTextColor(0.1,0.1,0.1)
 
   grid:newLevel()
 end
@@ -157,7 +164,7 @@ function scene:hide(event)
     if gameLoopTimer then timer.cancel(gameLoopTimer) end
   elseif phase == 'did' then
     -- Code here runs immediately after the scene goes entirely off screen
-    composer.removeScene('MyNet')
+    composer.removeScene('Mycelium')
   end
 end
 

@@ -229,6 +229,7 @@ function Cell:rotate(dir)
     if self.grid:isComplete() then
       self.grid:sound('complete')
       self.grid:colorComplete()
+      self.grid:advanceLevel()
     end
   end
 

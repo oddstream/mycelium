@@ -18,6 +18,8 @@ local Grid = {
   sectionSound = nil,
   dingSound = nil,
   lockedSound = nil,
+
+  newButton = nil,
 }
 
 function Grid:new(gridGroup, shapesGroup, width, height)
@@ -79,7 +81,7 @@ function Grid:newLevel()
   self:createGraphics(0)
 
   self:fadeIn()
-
+  self.newButton:setFillColor(0.1,0.1,0.1)
   self.complete = false
 end
 
@@ -206,7 +208,6 @@ function Grid:colorCoins()
     {46,139,87}, -- SeaGreen
     {128,128,128},
   }
---[[
   local colorsPink = {
     {255,192,203}, -- Pink
     {255,105,180}, -- HotPink
@@ -216,7 +217,6 @@ function Grid:colorCoins()
 
     {238,130,238}, -- Violet
   }
-]]
   local colorsBlue = {
     {25,25,112},
     {65,105,225},
@@ -225,7 +225,6 @@ function Grid:colorCoins()
     {176,196,222},
     {0,0,205},
   }
---[[
   local colorsOrange = {
     {255,165,0},
     {255,69,0},
@@ -234,7 +233,6 @@ function Grid:colorCoins()
     {255,99,71},
     {128,128,128},
   }
-]]
   local colorsGray = {
     {128,128,128},
     {192,192,192},
@@ -242,6 +240,7 @@ function Grid:colorCoins()
     {220,220,220},
     {49,79,79},
   }
+
   local colorsAll = {
     colorsGreen,
     colorsBlue,
@@ -249,7 +248,9 @@ function Grid:colorCoins()
     -- colorsPink,
     colorsGray,
   }
+
   local colors = colorsAll[math.random(#colorsAll)]
+
   for _,row in ipairs(colors) do
     for i = 1,3 do
       row[i] = row[i] * 4 / 1020
@@ -299,6 +300,7 @@ end
 
 function Grid:colorComplete()
   self:iterator( function(c) c:colorComplete() end )
+  self.newButton:setFillColor(1,1,1)
 end
 
 function Grid:fadeIn()

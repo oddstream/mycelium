@@ -14,15 +14,15 @@ local Cell = {
   center = nil,   -- point table, screen coords
 
   ne, e, se, sw, w, nw = nil, nil, nil, nil, nil, nil,
-  coins = 0,
-  hw = 0,     -- hammingWeight
 
+  coins = 0,
+  bitCount = 0,      -- hammingWeight
   color = nil,       -- e.g. {0,1,0}
-  hexagon = nil,     -- ShapeObject for outline
   section = nil,     -- number of section (0 if locked)
 
-  grp = nil,        -- display group to put shapes in
-  grpObjects = nil, -- list of ShapeObject for coloring
+  hexagon = nil,     -- ShapeObject for outline
+  grp = nil,         -- display group to put shapes in
+  grpObjects = nil,  -- list of ShapeObject for coloring
 
   touchCoords = nil,
 }
@@ -381,7 +381,7 @@ function Cell:createGraphics(alpha) -- TODO alpha
 
   self.grpObjects = {}
 
-  local sWidth = dim.Q16
+  local sWidth = dim.Q20
   local capRadius = math.floor(sWidth/2)
 
   if self.bitCount == 1 then
@@ -479,7 +479,7 @@ end
 function Cell:fadeIn()
   if self.grpObjects then
     for _, o in ipairs(self.grpObjects) do
-      transition.fadeIn(o, {time=500});
+      transition.fadeIn(o, {time=math.random(9)*100});
     end
   end
 end

@@ -95,6 +95,11 @@ function scene:create(event)
   sceneGroup:insert(shapesGroup)
 
   local numX = 5
+  if display.pixelWidth > 2000 then
+    numX = 6
+  elseif display.pixelWidth < 1000 then
+    numX = 4
+  end
   local numY = (numX*2) - 1  -- odd number for mirror
 
   -- each cell is Q * math.sqrt(3) wide
@@ -108,18 +113,16 @@ function scene:create(event)
 
   grid = Grid:new(gridGroup, shapesGroup, numX, numY)
 
-  grid:newLevel()
-
   local function gridReset()
     grid:reset() -- calls fadeIn()
   end
 
-  local newButton = widget.newButton({
+  grid.newButton = widget.newButton({
     id = 'new',
     x = display.contentCenterX,
     y = display.contentHeight - 100,
     onRelease = function()
-      grid:fadeOut() 
+      grid:fadeOut()
       timer.performWithDelay(1000, gridReset, 1)
     end,
 
@@ -127,7 +130,10 @@ function scene:create(event)
     defaultFrame = 1,
     overFrame = 2,
   })
-  sceneGroup:insert(newButton)
+  grid.newButton:setFillColor(0.1, 0.1, 0.1)
+  sceneGroup:insert(grid.newButton)
+
+  grid:newLevel()
 end
 
 function scene:show(event)

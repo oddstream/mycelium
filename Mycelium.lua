@@ -133,12 +133,12 @@ function scene:create(event)
     defaultFrame = 1,
     overFrame = 2,
   })
-  grid.newButton:setFillColor(0.1, 0.1, 0.1)
+  grid.newButton:setFillColor(0.2,0.2,0.2)
   sceneGroup:insert(grid.newButton)
 
   grid.levelText = display.newText(sceneGroup, '', display.contentWidth, display.contentHeight - 100, native.systemFontBold, 72)
   grid.levelText.anchorX = 1  -- align right
-  grid.levelText:setTextColor(0.1,0.1,0.1)
+  grid.levelText:setTextColor(0.2,0.2,0.2)
 
   grid:newLevel()
 end
@@ -149,9 +149,9 @@ function scene:show(event)
 
   if phase == 'will' then
     -- Code here runs when the scene is still off screen (but is about to come on screen)
-    gameLoopTimer = timer.performWithDelay(1000, gameLoop, 0)
   elseif phase == 'did' then
     -- Code here runs when the scene is entirely on screen
+    gameLoopTimer = timer.performWithDelay(1000, gameLoop, 0)
   end
 end
 

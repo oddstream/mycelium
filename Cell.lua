@@ -25,6 +25,7 @@ local Cell = {
   grpObjects = nil,  -- list of ShapeObject for coloring
 
   touchCoords = nil,
+  touchPos = nil,
 }
 
 function Cell:new(grid, x, y)
@@ -293,8 +294,14 @@ function Cell:touch(event)
   local dim = dimensions
 
   -- print(event.phase, event.x, event.y)
+  local target = event.target
 
   if event.phase == 'began' then
+    -- tell corona that following touches come to this display object
+    display.getCurrentStage():setFocus(target)
+    -- remember that this object has the focus
+    target.hasFocus = true
+
     -- building these as needed, the touched cell has these coords
     self.touchCoords = {}
     for i = 1, 6 do
@@ -312,40 +319,43 @@ function Cell:touch(event)
 
   end
 
-  if not self.touchCoords then
-    -- we began in a different cell
-    return false
-  end
+  if self.touchCoords then
+    for i = 1, 6 do
+      if isPointInTriangle(event.x, event.y, unpack(self.touchCoords[i])) then
+        -- print(event.phase, 'in triangle', i)
+        -- local c = dim.cellTriangles[i]
+        -- local tri1 = display.newLine(self.grp, 0,0, c[3], c[4])
+        -- tri1.strokeWidth = 2
+        -- local tri2 = display.newLine(self.grp, 0,0, c[5], c[6])
+        -- tri2.strokeWidth = 2
 
-  for i = 1, 6 do
-    if isPointInTriangle(event.x, event.y, unpack(self.touchCoords[i])) then
-      -- print(event.phase, 'in triangle', i)
-      -- local c = dim.cellTriangles[i]
-      -- local tri1 = display.newLine(self.grp, 0,0, c[3], c[4])
-      -- tri1.strokeWidth = 2
-      -- local tri2 = display.newLine(self.grp, 0,0, c[5], c[6])
-      -- tri2.strokeWidth = 2
-
-      if event.phase == 'began' then
-        self.touchPos = i
-      elseif event.phase == 'moved' and self.touchPos then
-        if (i == self.touchPos + 1) or (self.touchPos == 6 and i == 1) then
-          self:rotate('clockwise')
+        if event.phase == 'began' then
           self.touchPos = i
-        elseif (i == self.touchPos - 1) or (self.touchPos == 1 and i == 6) then
-          self:rotate('anticlockwise')
-          self.touchPos = i
+        elseif event.phase == 'moved' and self.touchPos then
+          if (i == self.touchPos + 1) or (self.touchPos == 6 and i == 1) then
+            self:rotate('clockwise')
+            self.touchPos = i
+          elseif (i == self.touchPos - 1) or (self.touchPos == 1 and i == 6) then
+            self:rotate('anticlockwise')
+            self.touchPos = i
+          end
         end
+        break
       end
-      break
     end
   end
 
   if event.phase == 'ended' then
+    -- stop being responsible for touches
+    display.getCurrentStage():setFocus(nil)
+    -- remember this object no longer has the focus
+    target.hasFocus = false
+
     self.touchCoords = nil
     self.touchPos = nil
   end
 
+  return true -- we handled event
 end
 
 function Cell:createGraphics(alpha) -- TODO alpha
@@ -390,8 +400,8 @@ function Cell:createGraphics(alpha) -- TODO alpha
     local cd = table.find(dim.cellData, function(b) return self.coins == b.bit end)
     assert(cd)
     local line = display.newLine(self.grp,
-      0,
-      0, 
+      cd.c2eX / 2.5,
+      cd.c2eY / 2.5,
       cd.c2eX,
       cd.c2eY)
     line.strokeWidth = sWidth

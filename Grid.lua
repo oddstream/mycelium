@@ -87,7 +87,7 @@ function Grid:newLevel()
 
   self.levelText.text = string.format('#%u', self.gameState.level)
 
-  self.newButton:setFillColor(0.1,0.1,0.1)
+  self.newButton:setFillColor(0.2,0.2,0.2)
   self.complete = false
 end
 
@@ -126,37 +126,6 @@ function Grid:linkCells2()
     if oddRow then xdiffE = 1 else xdiffE = 0 end -- easterly
     if oddRow then xdiffW = 0 else xdiffW = -1 end -- westerly
 
---[[
-    fc = self:findCell(c.x + xdiffE, c.y - 1)
-    if fc then
-      c.ne = fc
-    end
-
-    fc = self:findCell(c.x + 1, c.y)
-    if fc then
-      c.e = fc
-    end
-
-    fc = self:findCell(c.x + xdiffE, c.y + 1)
-    if fc then
-      c.se = fc
-    end
-
-    fc = self:findCell(c.x + xdiffW, c.y + 1)
-    if fc then
-      c.sw = fc
-    end
-
-    fc = self:findCell(c.x - 1, c.y)
-    if fc then
-      c.w = fc
-    end
-
-    fc = self:findCell(c.x + xdiffW, c.y - 1)
-    if fc then
-      c.nw = fc
-    end
-]]
     c.ne = self:findCell(c.x + xdiffE, c.y - 1)
     c.e = self:findCell(c.x + 1, c.y)
     c.se = self:findCell(c.x + xdiffE, c.y + 1)
@@ -227,7 +196,6 @@ function Grid:colorCoins()
     {219,112,147}, -- PaleVioletRed
     {255,20,147},  -- DeepPink
     {199,21,133},  -- MediumVioletRed
-
     {238,130,238}, -- Violet
   }
   local colorsBlue = {
@@ -326,6 +294,15 @@ end
 
 function Grid:destroy()
   audio.stop()  -- stop all channels
+  --[[
+  for _,i in ipairs{'dingSound','sectionSound','tapSound','lockedSound'} do
+    if self[i] then
+      audio.dispose(self[i])
+      print('audio dispose', self[i])
+      self[i] = nil
+    end
+  end
+  ]]
   if self.dingSound then
     audio.dispose(self.dingSound)
     self.dingSound = nil

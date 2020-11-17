@@ -222,11 +222,20 @@ function Grid:colorCoins()
     {49,79,79},
   }
 
+  local colorsYellow = {
+    {189, 183, 107},  -- DarkKhaki
+    {240, 230, 140},  -- Khaki
+    {255, 218, 185},  -- PeachPuff
+    {255, 228, 181},  -- Moccasin
+    {255, 239, 213},  -- PapayaWhip
+    {255, 250, 205},  -- LemonChiffon
+  }
+
   local colorsAll = {
     colorsGreen,
     colorsBlue,
-    -- colorsOrange,
-    -- colorsPink,
+    colorsOrange,
+    colorsYellow,
     colorsGray,
   }
 

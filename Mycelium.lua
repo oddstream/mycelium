@@ -105,7 +105,7 @@ function scene:create(event)
 
   -- each cell is Q * math.sqrt(3) wide
   -- we need space for numX + a half
-  dimensions = Dim:new( math.floor(display.viewableContentWidth/(numX+0.5)/math.sqrt(3)) )
+  _G.DIMENSIONS = Dim:new( math.floor(display.viewableContentWidth/(numX+0.5)/math.sqrt(3)) )
   -- get 2 vertical cells in cell height * 1.75
   -- numY = math.floor(display.viewableContentHeight / dim.H * (1.75/2) )
 

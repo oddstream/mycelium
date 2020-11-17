@@ -29,7 +29,7 @@ local Cell = {
 }
 
 function Cell:new(grid, x, y)
-  local dim = dimensions
+  local dim = _G.DIMENSIONS
 
   local o = {}
   self.__index = self
@@ -93,7 +93,7 @@ function Cell:calcHammingWeight()
 end
 
 function Cell:shiftBits(num)
-  local dim = dimensions
+  local dim = _G.DIMENSIONS
 
   num = num or 1
   while num > 0 do
@@ -134,7 +134,7 @@ function Cell:unshiftBits(num)
 end
 
 function Cell:isComplete(section)
-  local dim = dimensions
+  local dim = _G.DIMENSIONS
 
   if section and self.section ~= section then
     return false
@@ -157,7 +157,7 @@ function Cell:isComplete(section)
 end
 
 function Cell:placeCoin(mirror)
-  local dim = dimensions
+  local dim = _G.DIMENSIONS
 
   for _,cd in ipairs(dim.cellData) do
     if math.random() < PLACE_COIN_CHANCE then
@@ -185,7 +185,7 @@ function Cell:jumbleCoin()
 end
 
 function Cell:colorConnected(color, section)
-  local dim = dimensions
+  local dim = _G.DIMENSIONS
 
   self.color = color
   self.section = section
@@ -291,7 +291,7 @@ local function isPointInTriangle(px,py,ax,ay,bx,by,cx,cy)
 end
 
 function Cell:touch(event)
-  local dim = dimensions
+  local dim = _G.DIMENSIONS
 
   -- print(event.phase, event.x, event.y)
   local target = event.target
@@ -359,7 +359,7 @@ function Cell:touch(event)
 end
 
 function Cell:createGraphics(alpha) -- TODO alpha
-  local dim = dimensions
+  local dim = _G.DIMENSIONS
 
   alpha = alpha or 1.0
 

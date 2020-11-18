@@ -3,8 +3,10 @@
 local bit = require('plugin.bit')
 local bezier = require('Bezier')
 
+local Util = require 'Util'
+
 local PLACE_COIN_CHANCE = 0.3333 / 2
-local SHOW_HEXAGON = true
+-- local SHOW_HEXAGON = false
 
 local Cell = {
   -- prototype object
@@ -41,7 +43,7 @@ function Cell:new(grid, x, y)
 
   -- calculate where the screen coords center point will be
   -- odd-r horizontal layout shoves odd rows half a hexagon width to the right
-  -- no '&'' operator in Lua 5.1, hence math.fmod(y,2) == 1
+  -- no '&' operator in Lua 5.1, hence math.fmod(y,2) == 1
 
   -- o.center = {x=(x*grid.w) + (grid.w/2), y=(y * grid.h75) + (grid.h/2) - grid.h + 120}
   o.center = {x=(x*dim.W)-(dim.W), y=(y*dim.H75)}
@@ -54,9 +56,13 @@ function Cell:new(grid, x, y)
   -- "These coordinates will automatically be re-centered about the center of the polygon."
   o.hexagon = display.newPolygon(o.grid.gridGroup, o.center.x, o.center.y, dim.cellHex)
   o.hexagon:setFillColor(0,0,0)
-  if SHOW_HEXAGON then
+  -- if SHOW_HEXAGON then
+  if _G.gameState.level == 1 then
     o.hexagon:setStrokeColor(0.1)
     o.hexagon.strokeWidth = 2
+  else
+    o.hexagon:setStrokeColor(0)
+    o.hexagon.strokeWidth = 0
   end
 
   o.hexagon:addEventListener('tap', o) -- table listener
@@ -181,7 +187,11 @@ function Cell:placeCoin(mirror)
 end
 
 function Cell:jumbleCoin()
-  self:unshiftBits(math.random(5))
+  if system.getInfo('environment') == 'simulator' then
+    self:unshiftBits(math.random(1))
+  else
+    self:unshiftBits(math.random(5))
+  end
 end
 
 function Cell:colorConnected(color, section)
@@ -225,21 +235,21 @@ function Cell:rotate(dir)
   local function afterRotate()
     self:createGraphics(1)
     if self.grid:isSectionComplete(self.section) then
-      self.grid:sound('section')
+      Util.sound('section')
     end
     if self.grid:isComplete() then
-      self.grid:sound('complete')
+      Util.sound('complete')
       self.grid:colorComplete()
-      self.grid:advanceLevel()
+      _G.gameState:advanceLevel()
     end
   end
 
   dir = dir or 'clockwise'
 
   if self.section == 0 then
-    self.grid:sound('locked')
+    Util.sound('locked')
   elseif self.grp then
-    self.grid:sound('tap')
+    Util.sound('tap')
     -- shift bits now (rather than in afterRotate) in case another tap happens while animating
     local degrees
     if dir == 'clockwise' then
@@ -260,40 +270,15 @@ end
 
 function Cell:tap(event)
   -- implement table listener for tap events
-  -- print('tap', event.numTaps, self.x, self.y, self.coins, self.bitCount)
+  -- trace('tap', event.numTaps, self.x, self.y, self.coins, self.bitCount)
   self:rotate('clockwise')
   return true
-end
-
-local function isPointInTriangle(px,py,ax,ay,bx,by,cx,cy)
-  -- assert(type(ax)=='number')
-  -- assert(type(ay)=='number')
-  -- assert(type(bx)=='number')
-  -- assert(type(by)=='number')
-  -- assert(type(cx)=='number')
-  -- assert(type(cy)=='number')
-  local v0 = {cx-ax,cy-ay}
-  local v1 = {bx-ax,by-ay}
-  local v2 = {px-ax,py-ay}
-
-  local dot00 = (v0[1]*v0[1]) + (v0[2]*v0[2]);
-  local dot01 = (v0[1]*v1[1]) + (v0[2]*v1[2]);
-  local dot02 = (v0[1]*v2[1]) + (v0[2]*v2[2]);
-  local dot11 = (v1[1]*v1[1]) + (v1[2]*v1[2]);
-  local dot12 = (v1[1]*v2[1]) + (v1[2]*v2[2]);
-
-  local invDenom = 1 / (dot00 * dot11 - dot01 * dot01)
-
-  local u = (dot11 * dot02 - dot01 * dot12) * invDenom
-  local v = (dot00 * dot12 - dot01 * dot02) * invDenom
-
-  return ((u >= 0) and (v >= 0) and (u + v < 1))
 end
 
 function Cell:touch(event)
   local dim = _G.DIMENSIONS
 
-  -- print(event.phase, event.x, event.y)
+  -- trace(event.phase, event.x, event.y)
   local target = event.target
 
   if event.phase == 'began' then
@@ -321,8 +306,8 @@ function Cell:touch(event)
 
   if self.touchCoords then
     for i = 1, 6 do
-      if isPointInTriangle(event.x, event.y, unpack(self.touchCoords[i])) then
-        -- print(event.phase, 'in triangle', i)
+      if Util.isPointInTriangle(event.x, event.y, unpack(self.touchCoords[i])) then
+        -- trace(event.phase, 'in triangle', i)
         -- local c = dim.cellTriangles[i]
         -- local tri1 = display.newLine(self.grp, 0,0, c[3], c[4])
         -- tri1.strokeWidth = 2
@@ -369,8 +354,8 @@ function Cell:createGraphics(alpha) -- TODO alpha
 
   -- gotcha the 4th argument to set color function ~= the .alpha property
   -- blue={0,0,1}
-  -- print(table.unpack(blue), 3)
-  --> 0 6
+  -- trace(table.unpack(blue), 3)
+  -- > 0 6
 --[[
   local colora = {}
   for k,v in pairs(self.color) do colora[k] = v end

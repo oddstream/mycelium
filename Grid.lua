@@ -14,14 +14,6 @@ local Grid = {
 
   complete = nil,
 
-  tapSound = nil,
-  sectionSound = nil,
-  dingSound = nil,
-  lockedSound = nil,
-
-  gameState = nil,
-
-  levelText = nil,
   newButton = nil,
 }
 
@@ -48,11 +40,6 @@ function Grid:new(gridGroup, shapesGroup, width, height)
 
   o.complete = false
 
-  o.tapSound = audio.loadSound('sound56.wav')
-  o.sectionSound = audio.loadSound('sound63.wav')
-  o.dingSound = audio.loadSound('complete.wav')
-  o.lockedSound = audio.loadSound('sound61.wav')
-
   return o
 end
 
@@ -78,6 +65,9 @@ function Grid:reset()
 end
 
 function Grid:newLevel()
+
+  math.randomseed(_G.gameState.level + 2) -- make the first level easier and prettier
+
   self:placeCoins()
   self:colorCoins()
   self:jumbleCoins()
@@ -85,29 +75,10 @@ function Grid:newLevel()
 
   self:fadeIn()
 
-  self.levelText.text = string.format('#%u', self.gameState.level)
+  self.newButton:setLabel(tostring(_G.gameState.level))
+  self.newButton:setFillColor(0.2,0.2,0.2)  -- fade button out
 
-  self.newButton:setFillColor(0.2,0.2,0.2)
   self.complete = false
-end
-
-function Grid:advanceLevel()
-  assert(self.gameState)
-  assert(self.gameState.level)
-  self.gameState.level = self.gameState.level + 1
-  self.gameState:write()
-end
-
-function Grid:sound(type)
-  if type == 'tap' then
-    if self.tapSound then audio.play(self.tapSound) end
-  elseif type == 'section' then
-    if self.sectionSound then audio.play(self.sectionSound) end
-  elseif type == 'complete' then
-    if self.dingSound then audio.play(self.dingSound) end
-  elseif type == 'locked' then
-    if self.lockedSound then audio.play(self.lockedSound) end
-  end
 end
 
 function Grid:linkCells2()
@@ -148,7 +119,6 @@ function Grid:findCell(x,y)
       return c
     end
   end
-  -- print('*** cannot find cell', x, y)
   return nil
 end
 
@@ -243,7 +213,8 @@ function Grid:colorCoins()
 
   for _,row in ipairs(colors) do
     for i = 1,3 do
-      row[i] = row[i] * 4 / 1020
+      -- row[i] = row[i] * 4 / 1020
+      row[i] = row[i] / 255
     end
   end
 
@@ -290,7 +261,8 @@ end
 
 function Grid:colorComplete()
   self:iterator( function(c) c:colorComplete() end )
-  self.newButton:setFillColor(1,1,1)
+  self.newButton:setLabel('»')
+  self.newButton:setFillColor(1,1,1)  -- fade button in
 end
 
 function Grid:fadeIn()
@@ -303,31 +275,6 @@ end
 
 function Grid:destroy()
   audio.stop()  -- stop all channels
-  --[[
-  for _,i in ipairs{'dingSound','sectionSound','tapSound','lockedSound'} do
-    if self[i] then
-      audio.dispose(self[i])
-      print('audio dispose', self[i])
-      self[i] = nil
-    end
-  end
-  ]]
-  if self.dingSound then
-    audio.dispose(self.dingSound)
-    self.dingSound = nil
-  end
-  if self.sectionSound then
-    audio.dispose(self.sectionSound)
-    self.sectionSound = nil
-  end
-  if self.tapSound then
-    audio.dispose(self.tapSound)
-    self.tapSound = nil
-  end
-  if self.lockedSound then
-    audio.dispose(self.lockedSound)
-    self.lockedSound = nil
-  end
 end
 
 return Grid

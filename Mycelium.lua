@@ -7,7 +7,7 @@ local GameState = require 'GameState'
 local physics = require 'physics'
 physics.start()
 physics.setGravity(0, 0)  -- 9.8
-print(physics.engineVersion)
+trace('physics.engineVersion', physics.engineVersion)
 
 local composer = require('composer')
 local scene = composer.newScene()
@@ -42,7 +42,7 @@ local sheetOptions =
   }
 }
 
-local imageSheet = graphics.newImageSheet('icons.png', sheetOptions)
+-- local imageSheet = graphics.newImageSheet('icons.png', sheetOptions)
 
 local function createAsteroid2(x, y, color)
   local newAsteroid = display.newCircle(backGroup, x, y, math.random(10))
@@ -129,16 +129,18 @@ function scene:create(event)
       timer.performWithDelay(1000, gridReset, 1)
     end,
 
-    sheet = imageSheet,
-    defaultFrame = 1,
-    overFrame = 2,
+    label = '»',
+    labelColor = { default={ 1, 1, 1 }, over={ 0.2, 0.2, 0.2 } },
+    font = native.systemFontBold,
+    fontSize = 100,
+    textOnly = true,
+
+    -- sheet = imageSheet,
+    -- defaultFrame = 1,
+    -- overFrame = 2,
   })
   grid.newButton:setFillColor(0.2,0.2,0.2)
   sceneGroup:insert(grid.newButton)
-
-  grid.levelText = display.newText(sceneGroup, '', display.contentWidth, display.contentHeight - 100, native.systemFontBold, 72)
-  grid.levelText.anchorX = 1  -- align right
-  grid.levelText:setTextColor(0.2,0.2,0.2)
 
   grid:newLevel()
 end

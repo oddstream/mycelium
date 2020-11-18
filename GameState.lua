@@ -7,7 +7,6 @@ local GameState = {
 }
 
 local filePath = system.pathForFile('gameState.json', system.DocumentsDirectory)
-print(filePath)
 
 function GameState:new()
   local o = {}
@@ -25,7 +24,7 @@ function GameState:read()
   if file then
     local contents = file:read('*a')
     io.close(file)
-    print('state loaded from file', contents)
+    print('state loaded from file', filePath, contents)
     local state = json.decode(contents)
     if state and state.level then
       self.level = state.level
@@ -41,5 +40,11 @@ function GameState:write()
     io.close(file )
   end
 end
+
+function GameState:advanceLevel()
+  self.level = self.level + 1
+  self:write()
+end
+
 
 return GameState

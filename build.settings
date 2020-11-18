@@ -44,7 +44,7 @@ settings =
   },
   excludeFiles =
   {
-    all = {'.gitignore','*.js','*.css','*.html','*.txt','*.pdn','Icon256.*','sound.unused/*','img/*','*.keystore','*.md','*.bat'},
+    all = {'.gitignore','*.js','*.css','*.html','*.txt','*.pdn','Icon256.*','unused/*','PlayStoreAssets/*','*.keystore','*.md','*.bat'},
     android = {'*.ico'},
     win32 = {'Icon-*.png'}
   }

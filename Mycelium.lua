@@ -97,7 +97,7 @@ function scene:create(event)
   shapesGroup = display.newGroup()
   sceneGroup:insert(shapesGroup)
 
-  grid = Grid:new(gridGroup, shapesGroup)
+  grid = Grid.new(gridGroup, shapesGroup)
 
   grid.newButton = widget.newButton({
     id = 'new',

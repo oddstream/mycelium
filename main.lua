@@ -89,6 +89,6 @@ if not _G.table.filter then
 end
 -- print('table filter', type(table.filter))
 
-_G.gameState = GameState:new()
+_G.gameState = GameState.new()
 
 composer.gotoScene('Splash', {effect='fade', params={scene='Mycelium'}})

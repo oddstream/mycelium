@@ -30,15 +30,15 @@ local Dim = {
   cellData = nil,
   cellHex = nil,
 }
+Dim.__index = Dim
 
 -- https://www.redblobgames.com/grids/hexagons/
 -- when packed, 2 hex occupy 1.5 wide, not 2
 -- and in pointy top, 2 vertical occupy 1.75, not 2
 
-function Dim:new(Q)
+function Dim.new(Q)
   local o = {}
-  self.__index = self
-  setmetatable(o, self)
+  setmetatable(o, Dim)
 
   o.Q = Q
 

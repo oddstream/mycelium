@@ -5,13 +5,13 @@ local json = require('json')
 local GameState = {
   level = 0,
 }
+GameState.__index = GameState
 
 local filePath = system.pathForFile('gameState.json', system.DocumentsDirectory)
 
-function GameState:new()
+function GameState.new()
   local o = {}
-  self.__index = GameState
-  setmetatable(o, self)
+  setmetatable(o, GameState)
 
   o.level = 1
   o:read()

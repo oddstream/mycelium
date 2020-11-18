@@ -28,12 +28,12 @@ local Cell = {
   touchCoords = nil,
   touchPos = nil,
 }
+Cell.__index = Cell
 
-function Cell:new(grid, x, y)
+function Cell.new(grid, x, y)
 
   local o = {}
-  self.__index = self
-  setmetatable(o, self)
+  setmetatable(o, Cell)
 
   o.grid = grid
   o.x = x
@@ -219,13 +219,18 @@ function Cell:colorComplete()
 ]]
   self.color = {1,1,1}
   if self.grp then
+    local dim = self.grid.dim
     for i = 1, self.grp.numChildren do
       local o = self.grp[i]
       if o.setStrokeColor then
+        -- lines
         o:setStrokeColor(unpack(self.color))
       end
       if o.setFillColor then
-        o:setFillColor(unpack(self.color))
+        -- end caps and circles
+        if o.path.radius < dim.Q33 then
+          o:setFillColor(unpack(self.color))
+        end
       end
     end
   end
@@ -465,6 +470,15 @@ function Cell:createGraphics(alpha)
     end
   end
 end
+
+--[[
+function Cell:dilateCircle()
+  if self.grp and self.bitCount == 1 then
+    local circle = self.grp[3]
+    circle.path.radius = circle.path.radius * 0.5
+  end
+end
+]]
 
 function Cell:fadeIn()
   if self.grp then

@@ -1,7 +1,5 @@
 -- Grid (of cells) class
 
-local composer = require('composer')
-
 local Cell = require 'Cell'
 local Dim = require 'Dim'
 
@@ -18,11 +16,11 @@ local Grid = {
 
   newButton = nil,
 }
+Grid.__index = Grid
 
-function Grid:new(gridGroup, shapesGroup)
+function Grid.new(gridGroup, shapesGroup)
   local o = {}
-  self.__index = self
-  setmetatable(o, self)
+  setmetatable(o, Grid)
 
   o.gridGroup = gridGroup
   o.shapesGroup = shapesGroup
@@ -74,7 +72,7 @@ function Grid:newLevel()
 
   -- each cell is Q * math.sqrt(3) wide
   -- we need space for numX + a half
-  self.dim = Dim:new( math.floor(display.viewableContentWidth/(self.width+0.5)/math.sqrt(3)) )
+  self.dim = Dim.new( math.floor(display.viewableContentWidth/(self.width+0.5)/math.sqrt(3)) )
 
   self:createCells()
   self:linkCells()
@@ -99,7 +97,7 @@ function Grid:createCells()
 
   for y = 1, self.height do
     for x = 1, self.width do
-      local c = Cell:new(self, x, y)
+      local c = Cell.new(self, x, y)
       table.insert(self.cells, c) -- push
     end
   end
@@ -287,7 +285,9 @@ function Grid:isSectionComplete(section)
 end
 
 function Grid:colorComplete()
-  self:iterator( function(c) c:colorComplete() end )
+  self:iterator( function(c)
+    c:colorComplete()
+  end )
   self.newButton:setLabel('»')
   self.newButton:setFillColor(1,1,1)  -- fade button in
 end

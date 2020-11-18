@@ -53,9 +53,6 @@ native.setProperty('windowTitleText', 'Mycelium Loops') -- Win32
 
 -- math.randomseed(os.time())
 
--- our one global, an object containing useful precalculated _G.DIMENSIONS
-_G.DIMENSIONS = {}
-
 _G.MYCELIUM_SOUNDS = {
   tap = audio.loadSound('assets/sound56.wav'),
   section = audio.loadSound('assets/sound63.wav'),

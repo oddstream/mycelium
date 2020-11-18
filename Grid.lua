@@ -3,11 +3,13 @@
 local composer = require('composer')
 
 local Cell = require 'Cell'
+local Dim = require 'Dim'
 
 local Grid = {
   -- prototype object
   gridGroup = nil,
-  shapeGroup = nil,
+  shapesGroup = nil,
+
   cells = nil,    -- array of Cell objects
   width = nil,      -- number of columns
   height = nil,      -- number of rows
@@ -17,7 +19,7 @@ local Grid = {
   newButton = nil,
 }
 
-function Grid:new(gridGroup, shapesGroup, width, height)
+function Grid:new(gridGroup, shapesGroup)
   local o = {}
   self.__index = self
   setmetatable(o, self)
@@ -25,63 +27,87 @@ function Grid:new(gridGroup, shapesGroup, width, height)
   o.gridGroup = gridGroup
   o.shapesGroup = shapesGroup
 
-  o.cells = {}
-  o.width = width
-  o.height = height
-
-  for y = 1, height do
-    for x = 1, width do
-      local c = Cell:new(o, x, y)
-      table.insert(o.cells, c) -- push
-    end
-  end
-
-  o:linkCells2()
-
-  o.complete = false
-
   return o
 end
 
 function Grid:reset()
-  -- clear out the Cells
-  self:iterator(function(c)
-    c:reset()
-  end)
+
+  -- clear out gridGroup, shapeGroup objects
+  while self.shapesGroup.numChildren > 0 do
+    display.remove(self.shapesGroup[self.shapesGroup.numChildren])
+  end
+
+  while self.gridGroup.numChildren > 0 do
+    display.remove(self.gridGroup[self.gridGroup.numChildren])
+  end
 
   do
-    local last_using = composer.getVariable('last_using')
-    if not last_using then
-      last_using = 0
-    end
+    -- local last_using = composer.getVariable('last_using')
+    -- if not last_using then
+    --   last_using = 0
+    -- end
     local before = collectgarbage('count')
     collectgarbage('collect')
     local after = collectgarbage('count')
-    print('collected', math.floor(before - after), 'KBytes, using', math.floor(after), 'KBytes', 'leaked', after-last_using)
-    composer.setVariable('last_using', after)
+    print('collected', math.floor(before - after), 'KBytes, now using', math.floor(after), 'KBytes')
+    -- composer.setVariable('last_using', after)
   end
 
-  self:newLevel()
 end
 
 function Grid:newLevel()
 
+  -- assume gridGroup, shapeGroup are created but empty
+
   math.randomseed(_G.gameState.level + 2) -- make the first level easier and prettier
+
+  -- width runs from 4 to 7
+  -- (0 % 4) + 4 == 4
+  -- (1 % 4) + 4 == 5
+  -- (2 % 4) + 4 == 6
+  -- (3 % 4) + 4 == 7
+  -- (4 % 4) + 4 == 4
+  -- (5 % 4) + 4 == 5
+  self.width = ((_G.gameState.level - 1) % 4) + 4
+  self.height = (self.width*2) - 1  -- odd number for mirror
+  trace('dimensions', self.width, self.height)
+
+  -- each cell is Q * math.sqrt(3) wide
+  -- we need space for numX + a half
+  self.dim = Dim:new( math.floor(display.viewableContentWidth/(self.width+0.5)/math.sqrt(3)) )
+
+  self:createCells()
+  self:linkCells()
 
   self:placeCoins()
   self:colorCoins()
   self:jumbleCoins()
   self:createGraphics(0)
 
+  self.complete = false
+
   self:fadeIn()
 
   self.newButton:setLabel(tostring(_G.gameState.level))
   self.newButton:setFillColor(0.2,0.2,0.2)  -- fade button out
 
-  self.complete = false
 end
 
-function Grid:linkCells2()
+function Grid:createCells()
+
+  self.cells = {}
+
+  for y = 1, self.height do
+    for x = 1, self.width do
+      local c = Cell:new(self, x, y)
+      table.insert(self.cells, c) -- push
+    end
+  end
+
+end
+
+function Grid:linkCells()
+
   for _,c in ipairs(self.cells) do
     -- local fc -- found cell
 
@@ -105,6 +131,7 @@ function Grid:linkCells2()
     c.nw = self:findCell(c.x + xdiffW, c.y - 1)
 
   end
+
 end
 
 function Grid:iterator(fn)
@@ -233,7 +260,7 @@ function Grid:colorCoins()
 end
 
 function Grid:jumbleCoins()
-  self:iterator( function(c) c:jumbleCoin() end )
+  self:iterator(function(c) c:jumbleCoin() end)
 end
 
 function Grid:isComplete()

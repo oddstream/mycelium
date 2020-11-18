@@ -24,14 +24,12 @@ local Cell = {
 
   hexagon = nil,     -- ShapeObject for outline
   grp = nil,         -- display group to put shapes in
-  grpObjects = nil,  -- list of ShapeObject for coloring
 
   touchCoords = nil,
   touchPos = nil,
 }
 
 function Cell:new(grid, x, y)
-  local dim = _G.DIMENSIONS
 
   local o = {}
   self.__index = self
@@ -44,6 +42,8 @@ function Cell:new(grid, x, y)
   -- calculate where the screen coords center point will be
   -- odd-r horizontal layout shoves odd rows half a hexagon width to the right
   -- no '&' operator in Lua 5.1, hence math.fmod(y,2) == 1
+
+  local dim = o.grid.dim
 
   -- o.center = {x=(x*grid.w) + (grid.w/2), y=(y * grid.h75) + (grid.h/2) - grid.h + 120}
   o.center = {x=(x*dim.W)-(dim.W), y=(y*dim.H75)}
@@ -78,9 +78,6 @@ function Cell:reset()
     self.grp:removeSelf()
     self.grp = nil
   end
-  if self.grpObjects then
-    self.grpObjects = nil
-  end
 end
 
 function Cell:calcHammingWeight()
@@ -99,7 +96,7 @@ function Cell:calcHammingWeight()
 end
 
 function Cell:shiftBits(num)
-  local dim = _G.DIMENSIONS
+  local dim = self.grid.dim
 
   num = num or 1
   while num > 0 do
@@ -140,7 +137,7 @@ function Cell:unshiftBits(num)
 end
 
 function Cell:isComplete(section)
-  local dim = _G.DIMENSIONS
+  local dim = self.grid.dim
 
   if section and self.section ~= section then
     return false
@@ -163,7 +160,7 @@ function Cell:isComplete(section)
 end
 
 function Cell:placeCoin(mirror)
-  local dim = _G.DIMENSIONS
+  local dim = self.grid.dim
 
   for _,cd in ipairs(dim.cellData) do
     if math.random() < PLACE_COIN_CHANCE then
@@ -188,14 +185,16 @@ end
 
 function Cell:jumbleCoin()
   if system.getInfo('environment') == 'simulator' then
-    self:unshiftBits(math.random(1))
+    if math.random() > 0.9 then
+      self:unshiftBits(1)
+    end
   else
     self:unshiftBits(math.random(5))
   end
 end
 
 function Cell:colorConnected(color, section)
-  local dim = _G.DIMENSIONS
+  local dim = self.grid.dim
 
   self.color = color
   self.section = section
@@ -219,8 +218,9 @@ function Cell:colorComplete()
   (position, rotation, etc.). Thus, on the next render pass, the child will re-render.
 ]]
   self.color = {1,1,1}
-  if self.grpObjects then
-    for _, o in ipairs(self.grpObjects) do
+  if self.grp then
+    for i = 1, self.grp.numChildren do
+      local o = self.grp[i]
       if o.setStrokeColor then
         o:setStrokeColor(unpack(self.color))
       end
@@ -232,7 +232,8 @@ function Cell:colorComplete()
 end
 
 function Cell:rotate(dir)
-  local function afterRotate()
+
+  local function _afterRotate()
     self:createGraphics(1)
     if self.grid:isSectionComplete(self.section) then
       Util.sound('section')
@@ -263,7 +264,8 @@ function Cell:rotate(dir)
     transition.to(self.grp, {
       time = 100,
       rotation = degrees,
-      onComplete = afterRotate,
+      transition = easing.linear,
+      onComplete = _afterRotate,
     })
   end
 end
@@ -276,7 +278,7 @@ function Cell:tap(event)
 end
 
 function Cell:touch(event)
-  local dim = _G.DIMENSIONS
+  local dim = self.grid.dim
 
   -- trace(event.phase, event.x, event.y)
   local target = event.target
@@ -343,14 +345,10 @@ function Cell:touch(event)
   return true -- we handled event
 end
 
-function Cell:createGraphics(alpha) -- TODO alpha
-  local dim = _G.DIMENSIONS
+function Cell:createGraphics(alpha)
+  local dim = self.grid.dim
 
   alpha = alpha or 1.0
-
-  if 0 == self.coins then
-    return
-  end
 
   -- gotcha the 4th argument to set color function ~= the .alpha property
   -- blue={0,0,1}
@@ -366,7 +364,10 @@ function Cell:createGraphics(alpha) -- TODO alpha
   if self.grp then
     self.grp:removeSelf()
     self.grp = nil
-    self.grpObjects = nil
+  end
+
+  if 0 == self.coins then
+    return
   end
 
   self.grp = display.newGroup()
@@ -374,8 +375,6 @@ function Cell:createGraphics(alpha) -- TODO alpha
   self.grp.x = self.center.x
   self.grp.y = self.center.y
   self.grid.shapesGroup:insert(self.grp)
-
-  self.grpObjects = {}
 
   local sWidth = dim.Q20
   local capRadius = math.floor(sWidth/2)
@@ -392,19 +391,16 @@ function Cell:createGraphics(alpha) -- TODO alpha
     line.strokeWidth = sWidth
     line:setStrokeColor(unpack(self.color))
     line.alpha = alpha
-    table.insert(self.grpObjects, line)
 
     local endcap = display.newCircle(self.grp, cd.c2eX, cd.c2eY, capRadius)
     endcap:setFillColor(unpack(self.color))
     endcap.alpha = alpha
-    table.insert(self.grpObjects, endcap)
 
     local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
     circle.strokeWidth = sWidth
     circle:setStrokeColor(unpack(self.color))
     circle.alpha = alpha
     circle:setFillColor(0,0,0)
-    table.insert(self.grpObjects, circle)
 
   else
     -- until Bezier curves, just draw a line from coin-bit-edge to center
@@ -451,7 +447,7 @@ function Cell:createGraphics(alpha) -- TODO alpha
       local cp1 = {x=(arr[n].x)/av, y=(arr[n].y)/av}
       local cp2 = {x=(arr[n+1].x)/av, y=(arr[n+1].y)/av}
       local curve = bezier.new(
-        arr[n].x, arr[n].y, 
+        arr[n].x, arr[n].y,
         cp1.x, cp1.y,
         cp2.x, cp2.y,
         arr[n+1].x, arr[n+1].y)
@@ -460,38 +456,34 @@ function Cell:createGraphics(alpha) -- TODO alpha
       curveDisplayObject:setStrokeColor(unpack(self.color))
       curveDisplayObject.alpha = alpha
       self.grp:insert(curveDisplayObject)
-      table.insert(self.grpObjects, curveDisplayObject)
     end
 
     for n = 1, #arr do
       local endcap = display.newCircle(self.grp, arr[n].x, arr[n].y, capRadius)
       endcap:setFillColor(unpack(self.color))
       endcap.alpha = alpha
-      table.insert(self.grpObjects, endcap)
     end
   end
 end
 
 function Cell:fadeIn()
-  if self.grpObjects then
-    for _, o in ipairs(self.grpObjects) do
-      transition.fadeIn(o, {time=math.random(9)*100});
+  if self.grp then
+    for i=1, self.grp.numChildren do
+      transition.fadeIn(self.grp[i], {time=math.random(9)*100})
     end
   end
 end
 
 function Cell:fadeOut()
-  if self.grpObjects then
-    for _, o in ipairs(self.grpObjects) do
-      transition.fadeOut(o, {time=math.random(9)*100});
+  if self.grp then
+    for i=1, self.grp.numChildren do
+      transition.fadeOut(self.grp[i], {time=math.random(9)*100})
     end
   end
 end
 
 --[[
 function Cell:destroy()
-  self.grid = nil
-  -- TODO
 end
 ]]
 

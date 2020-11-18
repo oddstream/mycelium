@@ -2,7 +2,8 @@ local Bezier = {
 	c = { x = {0,0,0}, y = {0,0,0}, },
 	x = { 10, 50, 160, 200 },
 	y = { 50, 100, 100, 50 },
-	quality = 0.01,
+  -- quality = 0.01,
+  quality = 0.09  -- largest value without seeing graphical weirdness
 }
 Bezier.__index = Bezier
 

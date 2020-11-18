@@ -1,12 +1,10 @@
--- MyNet.lua
+-- Mycelium.lua
 
-local Dim = require 'Dim'
 local Grid = require 'Grid'
-local GameState = require 'GameState'
 
 local physics = require 'physics'
 physics.start()
-physics.setGravity(0, 0)  -- 9.8
+physics.setGravity(0, 0.01)  -- 9.8
 trace('physics.engineVersion', physics.engineVersion)
 
 local composer = require('composer')
@@ -15,14 +13,15 @@ local scene = composer.newScene()
 local widget = require('widget')
 widget.setTheme('widget_theme_android_holo_dark')
 
-local asteroidsTable = {}
+local sporesTable = {}
 
-local backGroup, gridGroup, shapesGroup
+local sporesGroup, gridGroup, shapesGroup
 
 local gameLoopTimer = nil
 
 local grid = nil
 
+--[[
 local sheetOptions =
 {
   frames =
@@ -42,18 +41,21 @@ local sheetOptions =
   }
 }
 
--- local imageSheet = graphics.newImageSheet('icons.png', sheetOptions)
+local imageSheet = graphics.newImageSheet('icons.png', sheetOptions)
+]]
 
-local function createAsteroid2(x, y, color)
-  local newAsteroid = display.newCircle(backGroup, x, y, math.random(10))
-  table.insert(asteroidsTable, newAsteroid)
-  physics.addBody(newAsteroid, 'dynamic', { density=0.2, radius=10, bounce=0.9 } )
+local function createSpore(x, y, color)
+  local radius = math.random(6)
+  local newSpore = display.newCircle(sporesGroup, x, y, radius)
+  physics.addBody(newSpore, 'dynamic', { density=0.1, radius=radius, bounce=0.9 } )
   if grid.complete then
-    newAsteroid:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
+    newSpore:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
   else
-    newAsteroid:setLinearVelocity( math.random( -25,25 ), math.random( -25,25 ) )
+    newSpore:setLinearVelocity( math.random( -20,20 ), math.random( -20,20 ) )
   end
-  newAsteroid:setFillColor(unpack(color))
+  newSpore.angularVelocity = 90
+  newSpore:setFillColor(unpack(color))
+  table.insert(sporesTable, newSpore)
 end
 
 local function gameLoop()
@@ -64,21 +66,21 @@ local function gameLoop()
 
   grid:iterator(function(c)
     if c.bitCount == 1 then
-      createAsteroid2(c.center.x, c.center.y, c.color)
+      createSpore(c.center.x, c.center.y, c.color)
     end
   end)
 
-  -- Remove asteroids which have drifted off screen
-  for i = #asteroidsTable, 1, -1 do
-    local thisAsteroid = asteroidsTable[i]
+  -- Remove spores which have drifted off screen
+  for i = #sporesTable, 1, -1 do
+    local thisSpore = sporesTable[i]
 
-    if ( thisAsteroid.x < 0 or
-       thisAsteroid.x > display.contentWidth or
-       thisAsteroid.y < 0 or
-       thisAsteroid.y > display.contentHeight )
+    if ( thisSpore.x < 0 or
+       thisSpore.x > display.contentWidth or
+       thisSpore.y < 0 or
+       thisSpore.y > display.contentHeight )
     then
-      display.remove( thisAsteroid )
-      table.remove( asteroidsTable, i )
+      display.remove(thisSpore)
+      table.remove(sporesTable, i)
     end
   end
 end
@@ -89,36 +91,13 @@ function scene:create(event)
   gridGroup = display.newGroup()
   sceneGroup:insert(gridGroup)
 
-  backGroup = display.newGroup()
-  sceneGroup:insert(backGroup)
+  sporesGroup = display.newGroup()
+  sceneGroup:insert(sporesGroup)
 
   shapesGroup = display.newGroup()
   sceneGroup:insert(shapesGroup)
 
-  local numX = 5
-  if display.pixelWidth > 2000 then
-    numX = 6
-  elseif display.pixelWidth < 1000 then
-    numX = 4
-  end
-  local numY = (numX*2) - 1  -- odd number for mirror
-
-  -- each cell is Q * math.sqrt(3) wide
-  -- we need space for numX + a half
-  _G.DIMENSIONS = Dim:new( math.floor(display.viewableContentWidth/(numX+0.5)/math.sqrt(3)) )
-  -- get 2 vertical cells in cell height * 1.75
-  -- numY = math.floor(display.viewableContentHeight / dim.H * (1.75/2) )
-
-  -- for debugging the gaps between hexagons problem
-  -- display.setDefault('background', 0.5,0.5,0.5)
-
-  grid = Grid:new(gridGroup, shapesGroup, numX, numY)
-
-  grid.gameState = GameState:new()
-
-  local function gridReset()
-    grid:reset() -- calls fadeIn()
-  end
+  grid = Grid:new(gridGroup, shapesGroup)
 
   grid.newButton = widget.newButton({
     id = 'new',
@@ -126,7 +105,10 @@ function scene:create(event)
     y = display.contentHeight - 100,
     onRelease = function()
       grid:fadeOut()
-      timer.performWithDelay(1000, gridReset, 1)
+      timer.performWithDelay(1000, function()
+        grid:reset()
+        grid:newLevel()
+      end, 1)
     end,
 
     label = '»',

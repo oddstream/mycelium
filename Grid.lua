@@ -72,7 +72,7 @@ function Grid:newLevel()
 
   -- each cell is Q * math.sqrt(3) wide
   -- we need space for numX + a half
-  self.dim = Dim.new( math.floor(display.viewableContentWidth/(self.width+0.5)/math.sqrt(3)) )
+  self.dim = Dim.new( display.viewableContentWidth/(self.width+0.5)/math.sqrt(3) )
 
   self:createCells()
   self:linkCells()
@@ -232,6 +232,7 @@ function Grid:colorCoins()
     colorsOrange,
     colorsYellow,
     colorsGray,
+    colorsPink,
   }
 
   local colors = colorsAll[math.random(#colorsAll)]

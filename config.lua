@@ -12,10 +12,10 @@ application =
       This is very common to many modern phones too. This works out to 1:1.777778 
       if you want to measure it based on a 1 point scale.
     ]]
-    -- width = 1080,
-    -- height = 1920,
-    width = 720,
-    height = 1280,
+    width = 1080,
+    height = 1776,
+    -- width = 720,
+    -- height = 1280,
     scale = 'letterbox',  -- zoomEven, letterbox, adaptive
     fps = 30,
   },

@@ -79,4 +79,34 @@ function Util.sound(name)
   end
 end
 
+function Util.toast(grid, msg)
+
+  local x, y = display.contentCenterX, display.contentHeight * 0.8
+  local width, height = display.contentWidth / 2, display.contentHeight / 30
+
+  local rect = display.newRect(grid.shapesGroup, x, y, width, height)
+  rect:setFillColor(0.2,0.2,0.2)
+  rect:setStrokeColor(0.8,0.8,0.8)
+  rect.strokeWidth = 2
+
+  local text = display.newText({
+    parent = grid.shapesGroup,
+    text = msg,
+    x = x,
+    y = y,
+    width = width,
+    height = 0, -- to get text vertically aligned https://forums.coronalabs.com/topic/36558-is-the-new-text-alignment-always-top-aligned/
+    align = 'center',
+    font = native.systemFont,
+    fontSize = 16,
+  })
+  text:setFillColor(1,1,1)
+
+  local removeTimer = timer.performWithDelay(3000, function()
+      rect:removeSelf()
+      text:removeSelf()
+  end, 1)
+
+end
+
 return Util

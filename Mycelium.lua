@@ -44,6 +44,13 @@ local sheetOptions =
 local imageSheet = graphics.newImageSheet('icons.png', sheetOptions)
 ]]
 
+--[[
+local function gpgsListener(event)
+  Util.toast(event.name)
+  trace(event.name, event.isError, event.errorCode, event.errorMessage)
+end
+]]
+
 local function createSpore(x, y, color)
   local radius = math.random(6)
   local newSpore = display.newCircle(sporesGroup, x, y, radius)
@@ -125,6 +132,7 @@ function scene:create(event)
   sceneGroup:insert(grid.newButton)
 
   grid:newLevel()
+
 end
 
 function scene:show(event)

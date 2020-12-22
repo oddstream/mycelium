@@ -42,25 +42,25 @@ function Dim.new(Q)
 
   o.Q = Q
 
-  o.W = math.floor(math.sqrt(3)*Q)
-  o.W75 = math.floor(o.W*0.75)
-  o.W50 = math.floor(o.W*0.5)
-  o.W25 = math.floor(o.W*0.25)
+  o.W = math.sqrt(3)*Q
+  o.W75 = o.W*0.75
+  o.W50 = o.W*0.5
+  o.W25 = o.W*0.25
 
   o.H = 2 * Q
-  o.H75 = math.floor(o.H*0.75)
-  o.H50 = math.floor(o.H*0.5)
-  o.H25 = math.floor(o.H*0.25)
+  o.H75 = o.H*0.75
+  o.H50 = o.H*0.5
+  o.H25 = o.H*0.25
 
-  o.Q50 = math.floor(Q/2)
-  o.Q33 = math.floor(Q/3.333333)
-  o.Q20 = math.floor(Q/5)
-  o.Q10 = math.floor(Q/10)
+  o.Q50 = Q/2
+  o.Q33 = Q/3.333333
+  o.Q20 = Q/5
+  o.Q10 = Q/10
 
   -- https://gamedev.stackexchange.com/questions/18340/get-position-of-point-on-circumference-of-circle-given-an-angle
   local apothem = Q * math.cos(30 * math.pi / 180)  --  0.86602529158357
-  local X60 = math.floor(math.cos(60 * math.pi / 180) * apothem)
-  local Y60 = math.floor(math.sin(60 * math.pi / 180) * apothem)
+  local X60 = math.cos(60 * math.pi / 180) * apothem
+  local Y60 = math.sin(60 * math.pi / 180) * apothem
 
   o.cellData = {
     { bit=o.NE,  oppBit=o.SW,   link='ne',  vsym=3,  c2eX=X60,    c2eY=-Y60, },

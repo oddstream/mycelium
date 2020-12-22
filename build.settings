@@ -6,6 +6,10 @@ settings =
     {
       publisherId = "com.coronalabs"
     },
+    ["plugin.gpgs.v2"] = {
+      publisherId = "com.coronalabs",
+      supportedPlatforms = {["android"] = true, ["android-kindle"] = true}
+    },
   },
 
   splashScreen = 
@@ -29,7 +33,7 @@ settings =
   window =
   {
     defaultMode = 'normal',
-    defaultViewWidth = 480,
+    defaultViewWidth = 480 ,
     defaultViewHeight = 480 * 16 / 9,
     resizable = true,
     minViewWidth = 480,

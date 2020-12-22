@@ -37,6 +37,7 @@ if system.getInfo('platform') == 'win32' or system.getInfo('environment') == 'si
   -- print('androidDisplayApproximateDpi', system.getInfo('androidDisplayApproximateDpi'))
 end
 
+--[[
 _G.onTablet = system.getInfo('model') == 'iPad'
 if not _G.onTablet then
   local approximateDpi = system.getInfo('androidDisplayApproximateDpi')
@@ -48,6 +49,7 @@ if not _G.onTablet then
     end
   end
 end
+]]
 
 native.setProperty('windowTitleText', 'Mycelium Loops') -- Win32
 
@@ -59,10 +61,6 @@ _G.MYCELIUM_SOUNDS = {
   complete = audio.loadSound('assets/complete.wav'),
   locked = audio.loadSound('assets/sound61.wav'),
 }
-
--- for k,v in pairs( _G ) do
---   print( k , v )
--- end
 
 if not _G.table.find then
   function _G.table.find(tbl, fn)
@@ -91,4 +89,16 @@ end
 
 _G.gameState = GameState.new()
 
+-- _G.antialiasImageSheet = graphics.newImageSheet("antialias.png", {width=5, height=5, numFrames=1, sheetContentWidth=5, sheetContentHeight=5})
+-- _G.antialiasPaint = {
+--   type = 'image',
+--   sheet = _G.antialiasImageSheet,
+--   frame = 1,
+--   -- filename = system.pathForFile('antialias.png', system.ResourceDirectory)
+-- }
+
 composer.gotoScene('Splash', {effect='fade', params={scene='Mycelium'}})
+
+-- for k,v in pairs( _G ) do
+--   print( k , v )
+-- end

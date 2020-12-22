@@ -1,7 +1,8 @@
 -- Cell class
 
-local bit = require('plugin.bit')
-local bezier = require('Bezier')
+local bit = require 'plugin.bit'
+local bezier = require 'Bezier'
+local json = require 'json'
 
 local Util = require 'Util'
 
@@ -256,7 +257,7 @@ function Cell:rotate(dir)
     Util.sound('locked')
   elseif self.grp then
     Util.sound('tap')
-    -- shift bits now (rather than in afterRotate) in case another tap happens while animating
+    -- shift bits now (rather than in _afterRotate) in case another tap happens while animating
     local degrees
     if dir == 'clockwise' then
       self:shiftBits()
@@ -276,7 +277,6 @@ function Cell:rotate(dir)
 end
 
 function Cell:tap(event)
-  -- implement table listener for tap events
   -- trace('tap', event.numTaps, self.x, self.y, self.coins, self.bitCount)
   self:rotate('clockwise')
   return true
@@ -382,7 +382,7 @@ function Cell:createGraphics(alpha)
   self.grid.shapesGroup:insert(self.grp)
 
   local sWidth = dim.Q20
-  local capRadius = math.floor(sWidth/2)
+  local capRadius = math.ceil(sWidth/2)
 
   if self.bitCount == 1 then
 
@@ -394,8 +394,9 @@ function Cell:createGraphics(alpha)
       cd.c2eX,
       cd.c2eY)
     line.strokeWidth = sWidth
-    line:setStrokeColor(unpack(self.color))
     line.alpha = alpha
+    -- line.stroke = _G.antialiasPaint
+    line:setStrokeColor(unpack(self.color))
 
     local endcap = display.newCircle(self.grp, cd.c2eX, cd.c2eY, capRadius)
     endcap:setFillColor(unpack(self.color))
@@ -403,8 +404,9 @@ function Cell:createGraphics(alpha)
 
     local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
     circle.strokeWidth = sWidth
-    circle:setStrokeColor(unpack(self.color))
     circle.alpha = alpha
+    -- circle.stroke = _G.antialiasPaint
+    circle:setStrokeColor(unpack(self.color))
     circle:setFillColor(0,0,0)
 
   else

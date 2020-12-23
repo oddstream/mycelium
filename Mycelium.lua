@@ -109,7 +109,7 @@ function scene:create(event)
   grid.newButton = widget.newButton({
     id = 'new',
     x = display.contentCenterX,
-    y = display.contentHeight - 80,
+    y = display.contentHeight - 60,
     onRelease = function()
       grid:fadeOut()
       timer.performWithDelay(1000, function()
@@ -118,10 +118,10 @@ function scene:create(event)
       end, 1)
     end,
 
-    label = 'NEXT', --'»',
-    labelColor = { default={ 0.1, 0.1, 0.1 }, over={ 1, 1, 1 } },
-    font = 'assets/Acme-Regular.ttf',  --native.systemFontBold,
-    fontSize = 100,
+    label = '',
+    labelColor = { default={ 0.1, 0.1, 0.1 }, over={ 0.2, 0.2, 0.2 } },
+    font = 'assets/FredokaOne-Regular.ttf',  --native.systemFontBold,
+    fontSize = 80,
     textOnly = true,
 
     -- sheet = imageSheet,

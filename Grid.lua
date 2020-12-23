@@ -90,7 +90,7 @@ function Grid:newLevel()
 
   self:fadeIn()
 
-  self.newButton:setLabel(tostring(_G.gameState.level))
+  self.newButton:setLabel(string.format('(%s)', _G.gameState.level))
   -- self.newButton:setFillColor(0.2,0.2,0.2)
 
 end
@@ -224,15 +224,18 @@ function Grid:colorComplete()
   self:iterator( function(c)
     c:colorComplete()
   end )
-  self.newButton:setLabel('NEXT') --'»')
+  self.newButton:setLabel('(NEXT)') --'»')
+  self.newButton:setFillColor(unpack(self.completeColor))
 end
 
 function Grid:fadeIn()
   self:iterator( function(c) c:fadeIn() end )
+  transition.fadeIn(self.newButton, {time=1000})
 end
 
 function Grid:fadeOut()
   self:iterator( function(c) c:fadeOut() end )
+  transition.fadeOut(self.newButton, {time=1000})
 end
 
 function Grid:destroy()

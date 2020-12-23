@@ -118,42 +118,42 @@ function Util.chooseColors()
 
   -- https://en.wikipedia.org/wiki/Web_colors
   local colorsGreen = {
-    dec2Float(0,100,0),  -- DarkGreen
-    dec2Float(85,107,47),  -- DarkOliveGreen
-    dec2Float(107,142,35),  -- OliveDrab
-    dec2Float(139,69,19),  -- SaddleBrown
-    dec2Float(80,80,0),  -- Olive
-    dec2Float(154,205,50),  -- YellowGreen
-    dec2Float(46,139,87), -- SeaGreen
-    dec2Float(128,128,128),
+    dec2Float(  0, 100,   0), -- DarkGreen
+    dec2Float( 85, 107,  47), -- DarkOliveGreen
+    dec2Float(107, 142,  35), -- OliveDrab
+    dec2Float(139,  69,  19), -- SaddleBrown
+    dec2Float( 80,  80,   0), -- Olive
+    dec2Float(154, 205,  50), -- YellowGreen
+    dec2Float( 46, 139,  87), -- SeaGreen
+    -- dec2Float(128,128,128),
   }
   local colorsPink = {
     dec2Float(255,192,203), -- Pink
     dec2Float(255,105,180), -- HotPink
     dec2Float(219,112,147), -- PaleVioletRed
-    dec2Float(255,20,147),  -- DeepPink
-    dec2Float(199,21,133),  -- MediumVioletRed
+    dec2Float(255, 20,147), -- DeepPink
+    dec2Float(199, 21,133), -- MediumVioletRed
     dec2Float(238,130,238), -- Violet
   }
   local colorsBlue = {
-    dec2Float(25,25,112),
-    dec2Float(65,105,225),
-    dec2Float(30,144,255),
-    dec2Float(135,206,250),
+    dec2Float( 25, 25,112), -- MidnightBlue
+    dec2Float( 65,105,225), -- RoyalBlue
+    dec2Float( 30,144,255), -- DodgerBlue
+    dec2Float(135,206,250), -- LightSkyBlue
+    dec2Float( 70,130,180), -- SteelBlue
   }
   local colorsOrange = {
-    dec2Float(255,165,0),
-    dec2Float(255,69,0),
-    dec2Float(255,127,80),
-    dec2Float(255,140,0),
-    dec2Float(255,99,71),
-    dec2Float(128,128,128),
+    dec2Float(255,165,  0),
+    dec2Float(255, 69,  0),
+    dec2Float(255,127, 80),
+    dec2Float(255,140,  0),
+    dec2Float(255, 99, 71),
   }
   local colorsGray = {
     dec2Float(128,128,128),
     dec2Float(192,192,192),
     dec2Float(112,128,144),
-    dec2Float(50,50,50),
+    dec2Float( 50, 50, 50),
     dec2Float(220,220,220),
   }
 

@@ -485,7 +485,8 @@ end
 function Cell:fadeIn()
   if self.grp then
     for i=1, self.grp.numChildren do
-      transition.fadeIn(self.grp[i], {time=math.random(9)*100})
+      -- transition.fadeIn(self.grp[i], {time=math.random(9)*100})
+      transition.fadeIn(self.grp[i], {time=1000})
     end
   end
 end
@@ -493,7 +494,8 @@ end
 function Cell:fadeOut()
   if self.grp then
     for i=1, self.grp.numChildren do
-      transition.fadeOut(self.grp[i], {time=math.random(9)*100})
+      -- transition.fadeOut(self.grp[i], {time=math.random(9)*100})
+      transition.fadeOut(self.grp[i], {time=1000})
     end
   end
 end

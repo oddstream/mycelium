@@ -13,10 +13,12 @@ application =
       if you want to measure it based on a 1 point scale.
     ]]
     width = 1080,
-    height = 1776,
+    height = 1920,
     -- width = 720,
     -- height = 1280,
-    scale = 'letterbox',  -- zoomEven, letterbox, adaptive
+    scale = 'adaptive',  -- zoomEven, letterbox, adaptive
     fps = 30,
+    shaderPrecision = "highp",
+    -- antialias = true,
   },
 }

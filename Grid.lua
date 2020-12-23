@@ -1,5 +1,6 @@
 -- Grid (of cells) class
 
+local Util = require 'Util'
 local Cell = require 'Cell'
 local Dim = require 'Dim'
 
@@ -66,13 +67,16 @@ function Grid:newLevel()
   -- (3 % 4) + 4 == 7
   -- (4 % 4) + 4 == 4
   -- (5 % 4) + 4 == 5
-  self.width = ((_G.gameState.level - 1) % 4) + 4
+  self.width = ((_G.gameState.level - 1) % 3) + 3
   self.height = (self.width*2) - 1  -- odd number for mirror
   trace('dimensions', self.width, self.height)
 
   -- each cell is Q * math.sqrt(3) wide
   -- we need space for numX + a half
   self.dim = Dim.new( display.viewableContentWidth/(self.width+0.5)/math.sqrt(3) )
+
+  self.colors, self.backgroundColor, self.completeColor = Util.chooseColors()
+  display.setDefault("background", unpack(self.backgroundColor))
 
   self:createCells()
   self:linkCells()
@@ -87,7 +91,7 @@ function Grid:newLevel()
   self:fadeIn()
 
   self.newButton:setLabel(tostring(_G.gameState.level))
-  self.newButton:setFillColor(0.2,0.2,0.2)  -- fade button out
+  -- self.newButton:setFillColor(0.2,0.2,0.2)
 
 end
 
@@ -174,83 +178,14 @@ function Grid:placeCoins()
 end
 
 function Grid:colorCoins()
-  -- https://en.wikipedia.org/wiki/Web_colors
-  local colorsGreen = {
-    {0,100,0},  -- DarkGreen
-    {85,107,47},  -- DarkOliveGreen
-    {107,142,35},  -- OliveDrab
-    {139,69,19},  -- SaddleBrown
-    {80,80,0},  -- Olive
-    {154,205,50},  -- YellowGreen
-    {46,139,87}, -- SeaGreen
-    {128,128,128},
-  }
-  local colorsPink = {
-    {255,192,203}, -- Pink
-    {255,105,180}, -- HotPink
-    {219,112,147}, -- PaleVioletRed
-    {255,20,147},  -- DeepPink
-    {199,21,133},  -- MediumVioletRed
-    {238,130,238}, -- Violet
-  }
-  local colorsBlue = {
-    {25,25,112},
-    {65,105,225},
-    {30,144,255},
-    {135,206,250},
-    {176,196,222},
-    {0,0,205},
-  }
-  local colorsOrange = {
-    {255,165,0},
-    {255,69,0},
-    {255,127,80},
-    {255,140,0},
-    {255,99,71},
-    {128,128,128},
-  }
-  local colorsGray = {
-    {128,128,128},
-    {192,192,192},
-    {112,128,144},
-    {220,220,220},
-    {49,79,79},
-  }
-
-  local colorsYellow = {
-    {189, 183, 107},  -- DarkKhaki
-    {240, 230, 140},  -- Khaki
-    {255, 218, 185},  -- PeachPuff
-    {255, 228, 181},  -- Moccasin
-    {255, 239, 213},  -- PapayaWhip
-    {255, 250, 205},  -- LemonChiffon
-  }
-
-  local colorsAll = {
-    colorsGreen,
-    colorsBlue,
-    colorsOrange,
-    colorsYellow,
-    colorsGray,
-    colorsPink,
-  }
-
-  local colors = colorsAll[math.random(#colorsAll)]
-
-  for _,row in ipairs(colors) do
-    for i = 1,3 do
-      -- row[i] = row[i] * 4 / 1020
-      row[i] = row[i] / 255
-    end
-  end
-
+  assert(self.colors)
   local nColor = 1
   local section = 1
   local c = table.find(self.cells, function(d) return d.coins ~= 0 and d.color == nil end)
   while c do
-    c:colorConnected(colors[nColor], section)
+    c:colorConnected(self.colors[nColor], section)
     nColor = nColor + 1
-    if nColor > #colors then
+    if nColor > #self.colors then
       nColor = 1
     end
     section = section + 1
@@ -289,8 +224,7 @@ function Grid:colorComplete()
   self:iterator( function(c)
     c:colorComplete()
   end )
-  self.newButton:setLabel('»')
-  self.newButton:setFillColor(1,1,1)  -- fade button in
+  self.newButton:setLabel('NEXT') --'»')
 end
 
 function Grid:fadeIn()

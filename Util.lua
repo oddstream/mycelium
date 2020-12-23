@@ -79,6 +79,7 @@ function Util.sound(name)
   end
 end
 
+--[[
 function Util.toast(grid, msg)
 
   local x, y = display.contentCenterX, display.contentHeight * 0.8
@@ -107,6 +108,89 @@ function Util.toast(grid, msg)
       text:removeSelf()
   end, 1)
 
+end
+]]
+
+function Util.chooseColors()
+  local function dec2Float(r,g,b)
+    return {r/255,g/255,b/255}
+  end
+
+  -- https://en.wikipedia.org/wiki/Web_colors
+  local colorsGreen = {
+    dec2Float(0,100,0),  -- DarkGreen
+    dec2Float(85,107,47),  -- DarkOliveGreen
+    dec2Float(107,142,35),  -- OliveDrab
+    dec2Float(139,69,19),  -- SaddleBrown
+    dec2Float(80,80,0),  -- Olive
+    dec2Float(154,205,50),  -- YellowGreen
+    dec2Float(46,139,87), -- SeaGreen
+    dec2Float(128,128,128),
+  }
+  local colorsPink = {
+    dec2Float(255,192,203), -- Pink
+    dec2Float(255,105,180), -- HotPink
+    dec2Float(219,112,147), -- PaleVioletRed
+    dec2Float(255,20,147),  -- DeepPink
+    dec2Float(199,21,133),  -- MediumVioletRed
+    dec2Float(238,130,238), -- Violet
+  }
+  local colorsBlue = {
+    dec2Float(25,25,112),
+    dec2Float(65,105,225),
+    dec2Float(30,144,255),
+    dec2Float(135,206,250),
+  }
+  local colorsOrange = {
+    dec2Float(255,165,0),
+    dec2Float(255,69,0),
+    dec2Float(255,127,80),
+    dec2Float(255,140,0),
+    dec2Float(255,99,71),
+    dec2Float(128,128,128),
+  }
+  local colorsGray = {
+    dec2Float(128,128,128),
+    dec2Float(192,192,192),
+    dec2Float(112,128,144),
+    dec2Float(50,50,50),
+    dec2Float(220,220,220),
+  }
+
+  local colorsYellow = {
+    dec2Float(189, 183, 107),  -- DarkKhaki
+    dec2Float(240, 230, 140),  -- Khaki
+    dec2Float(255, 218, 185),  -- PeachPuff
+    dec2Float(255, 228, 181),  -- Moccasin
+    dec2Float(255, 239, 213),  -- PapayaWhip
+    dec2Float(255, 250, 205),  -- LemonChiffon
+  }
+
+  local colorsAll = {
+    colorsGreen,
+    colorsBlue,
+    colorsOrange,
+    colorsYellow,
+    colorsGray,
+    colorsPink,
+  }
+
+  local colors = colorsAll[math.random(#colorsAll)]
+
+  local sum = {0,0,0}
+  for _,row in ipairs(colors) do
+    for i = 1,3 do
+      sum[i] = sum[i] + row[i]
+    end
+  end
+  local avg = {0,0,0}
+  for i = 1, 3 do
+    avg[i] = sum[i] / #colors
+  end
+
+  -- trace('average color', avg[1], avg[2], avg[3])
+
+  return colors, {avg[1]*0.5, avg[2]*0.5, avg[3]*0.5}, {avg[1]*1.5, avg[2]*1.5, avg[3]*1.5}
 end
 
 return Util

@@ -56,7 +56,8 @@ function Cell.new(grid, x, y)
 
   -- "These coordinates will automatically be re-centered about the center of the polygon."
   o.hexagon = display.newPolygon(o.grid.gridGroup, o.center.x, o.center.y, dim.cellHex)
-  o.hexagon:setFillColor(0,0,0)
+  o.hexagon:setFillColor(unpack(o.grid.backgroundColor))
+
   -- if SHOW_HEXAGON then
   if _G.gameState.level == 1 then
     o.hexagon:setStrokeColor(0.1)
@@ -218,7 +219,7 @@ function Cell:colorComplete()
   Groups automatically detect when a child's properties have changed 
   (position, rotation, etc.). Thus, on the next render pass, the child will re-render.
 ]]
-  self.color = {1,1,1}
+  self.color = self.grid.completeColor
   if self.grp then
     local dim = self.grid.dim
     for i = 1, self.grp.numChildren do
@@ -388,6 +389,7 @@ function Cell:createGraphics(alpha)
 
     local cd = table.find(dim.cellData, function(b) return self.coins == b.bit end)
     assert(cd)
+
     local line = display.newLine(self.grp,
       cd.c2eX / 2.5,
       cd.c2eY / 2.5,
@@ -395,7 +397,6 @@ function Cell:createGraphics(alpha)
       cd.c2eY)
     line.strokeWidth = sWidth
     line.alpha = alpha
-    -- line.stroke = _G.antialiasPaint
     line:setStrokeColor(unpack(self.color))
 
     local endcap = display.newCircle(self.grp, cd.c2eX, cd.c2eY, capRadius)
@@ -405,9 +406,8 @@ function Cell:createGraphics(alpha)
     local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
     circle.strokeWidth = sWidth
     circle.alpha = alpha
-    -- circle.stroke = _G.antialiasPaint
     circle:setStrokeColor(unpack(self.color))
-    circle:setFillColor(0,0,0)
+    circle:setFillColor(unpack(self.grid.backgroundColor))
 
   else
     -- until Bezier curves, just draw a line from coin-bit-edge to center

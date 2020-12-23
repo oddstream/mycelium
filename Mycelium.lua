@@ -109,7 +109,7 @@ function scene:create(event)
   grid.newButton = widget.newButton({
     id = 'new',
     x = display.contentCenterX,
-    y = display.contentHeight - 100,
+    y = display.contentHeight - 80,
     onRelease = function()
       grid:fadeOut()
       timer.performWithDelay(1000, function()
@@ -118,9 +118,9 @@ function scene:create(event)
       end, 1)
     end,
 
-    label = '»',
-    labelColor = { default={ 1, 1, 1 }, over={ 0.2, 0.2, 0.2 } },
-    font = native.systemFontBold,
+    label = 'NEXT', --'»',
+    labelColor = { default={ 0.1, 0.1, 0.1 }, over={ 1, 1, 1 } },
+    font = 'assets/Acme-Regular.ttf',  --native.systemFontBold,
     fontSize = 100,
     textOnly = true,
 
@@ -128,7 +128,7 @@ function scene:create(event)
     -- defaultFrame = 1,
     -- overFrame = 2,
   })
-  grid.newButton:setFillColor(0.2,0.2,0.2)
+  -- grid.newButton:setFillColor(0.2,0.2,0.2)
   sceneGroup:insert(grid.newButton)
 
   grid:newLevel()

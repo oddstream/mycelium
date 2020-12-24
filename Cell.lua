@@ -186,13 +186,19 @@ function Cell:placeCoin(mirror)
 end
 
 function Cell:jumbleCoin()
+  local moves = 0
+
   if system.getInfo('environment') == 'simulator' then
     if math.random() > 0.9 then
-      self:unshiftBits(1)
+      moves = 1
     end
   else
-    self:unshiftBits(math.random(5))
+    moves = math.random(5)
   end
+
+  self:unshiftBits(moves)
+
+  return moves
 end
 
 function Cell:colorConnected(color, section)
@@ -213,15 +219,15 @@ end
 
 function Cell:colorComplete()
 --[[
-  When you modify a group's properties, all of its children are affected. 
-  For example, if you set the alpha property on a display group, 
-  each child's alpha value is multiplied by the new alpha of the group. 
-  Groups automatically detect when a child's properties have changed 
+  When you modify a group's properties, all of its children are affected.
+  For example, if you set the alpha property on a display group,
+  each child's alpha value is multiplied by the new alpha of the group.
+  Groups automatically detect when a child's properties have changed
   (position, rotation, etc.). Thus, on the next render pass, the child will re-render.
 ]]
   self.color = self.grid.completeColor
   if self.grp then
-    local dim = self.grid.dim
+    -- local dim = self.grid.dim
     for i = 1, self.grp.numChildren do
       local o = self.grp[i]
       if o.setStrokeColor then
@@ -229,8 +235,8 @@ function Cell:colorComplete()
         o:setStrokeColor(unpack(self.color))
       end
       if o.setFillColor then
-        -- end caps and circles
-        if o.path.radius < dim.Q33 then
+        -- end caps (radius dim.Q20/2) and circles (radius dim.Q33)
+        if o.myceliumObjectType == 'endcap' then
           o:setFillColor(unpack(self.color))
         end
       end
@@ -351,10 +357,10 @@ function Cell:touch(event)
   return true -- we handled event
 end
 
-function Cell:createGraphics(alpha)
+function Cell:createGraphics(scale)
   local dim = self.grid.dim
 
-  alpha = alpha or 1.0
+  scale = scale or 1.0
 
   -- gotcha the 4th argument to set color function ~= the .alpha property
   -- blue={0,0,1}
@@ -383,7 +389,7 @@ function Cell:createGraphics(alpha)
   self.grid.shapesGroup:insert(self.grp)
 
   local sWidth = dim.Q20
-  local capRadius = math.ceil(sWidth/2)
+  local capRadius = sWidth/2
 
   if self.bitCount == 1 then
 
@@ -396,18 +402,24 @@ function Cell:createGraphics(alpha)
       cd.c2eX,
       cd.c2eY)
     line.strokeWidth = sWidth
-    line.alpha = alpha
+    line.alpha = 1
+    line.xScale, line.yScale = scale, scale
     line:setStrokeColor(unpack(self.color))
+    line.myceliumObjectType = 'line'
 
     local endcap = display.newCircle(self.grp, cd.c2eX, cd.c2eY, capRadius)
     endcap:setFillColor(unpack(self.color))
-    endcap.alpha = alpha
+    endcap.alpha = 1
+    endcap.xScale, endcap.yScale = scale, scale
+    endcap.myceliumObjectType = 'endcap'
 
     local circle = display.newCircle(self.grp, 0, 0, dim.Q33)
     circle.strokeWidth = sWidth
-    circle.alpha = alpha
+    circle.alpha = 1
+    circle.xScale, circle.yScale = scale, scale
     circle:setStrokeColor(unpack(self.color))
     circle:setFillColor(unpack(self.grid.backgroundColor))
+    circle.myceliumObjectType = 'circle'
 
   else
     -- until Bezier curves, just draw a line from coin-bit-edge to center
@@ -416,7 +428,7 @@ function Cell:createGraphics(alpha)
       if bit.band(cd.bit, self.coins) == cd.bit then
         local line = display.newLine(self.grp,
         0,
-        0, 
+        0,
         cd.c2eX,
         cd.c2eY)
         line.strokeWidth = dim.Q10
@@ -461,14 +473,18 @@ function Cell:createGraphics(alpha)
       local curveDisplayObject = curve:get()
       curveDisplayObject.strokeWidth = sWidth
       curveDisplayObject:setStrokeColor(unpack(self.color))
-      curveDisplayObject.alpha = alpha
+      curveDisplayObject.alpha = 1
+      curveDisplayObject.xScale, curveDisplayObject.yScale = scale, scale
+      curveDisplayObject.myceliumObjectType = 'curve'
       self.grp:insert(curveDisplayObject)
     end
 
     for n = 1, #arr do
       local endcap = display.newCircle(self.grp, arr[n].x, arr[n].y, capRadius)
       endcap:setFillColor(unpack(self.color))
-      endcap.alpha = alpha
+      endcap.alpha = 1
+      endcap.xScale, endcap.yScale = scale, scale
+      endcap.myceliumObjectType = 'endcap'
     end
   end
 end
@@ -483,10 +499,12 @@ end
 ]]
 
 function Cell:fadeIn()
+  -- used to use fadeIn/Out, but couldn't figure out which blendMode to use
+  -- to stop endcaps and shape overlaps becoming visible during fade
   if self.grp then
     for i=1, self.grp.numChildren do
-      -- transition.fadeIn(self.grp[i], {time=math.random(9)*100})
-      transition.fadeIn(self.grp[i], {time=1000})
+      local o = self.grp[i]
+      transition.scaleTo(o, {xScale=1, yScale=1, time=500})
     end
   end
 end
@@ -494,8 +512,8 @@ end
 function Cell:fadeOut()
   if self.grp then
     for i=1, self.grp.numChildren do
-      -- transition.fadeOut(self.grp[i], {time=math.random(9)*100})
-      transition.fadeOut(self.grp[i], {time=1000})
+      local o = self.grp[i]
+      transition.scaleTo(o, {xScale=0.1, yScale=0.1, time=500})
     end
   end
 end

@@ -2,7 +2,7 @@
 
 local bit = require 'plugin.bit'
 local bezier = require 'Bezier'
-local json = require 'json'
+local physics = require 'physics'
 
 local Util = require 'Util'
 
@@ -125,11 +125,11 @@ function Cell:unshiftBits(num)
     return n
   end
 
-  assert(unshift(1) == 32)
-  assert(unshift(2) == 1)
-  assert(unshift(4) == 2)
-  assert(unshift(32) == 16)
-  assert(unshift(63) == 63)
+  -- assert(unshift(1) == 32)
+  -- assert(unshift(2) == 1)
+  -- assert(unshift(4) == 2)
+  -- assert(unshift(32) == 16)
+  -- assert(unshift(63) == 63)
 
   num = num or 1
   while num > 0 do
@@ -172,8 +172,8 @@ function Cell:placeCoin(mirror)
 
         if mirror then
           local m_cd = dim.cellData[cd.vsym]
-          assert(m_cd)
-          assert(m_cd.bit)
+          -- assert(m_cd)
+          -- assert(m_cd.bit)
           if mirror[m_cd.link] then
             mirror.coins = bit.bor(mirror.coins, m_cd.bit)
             mirror[m_cd.link].coins = bit.bor(mirror[m_cd.link].coins, m_cd.oppBit)
@@ -189,7 +189,7 @@ function Cell:jumbleCoin()
   local moves = 0
 
   if system.getInfo('environment') == 'simulator' then
-    if math.random() > 0.9 then
+    if self.bitCount == 1 then
       moves = 1
     end
   else
@@ -217,7 +217,6 @@ function Cell:colorConnected(color, section)
   end
 end
 
-function Cell:colorComplete()
 --[[
   When you modify a group's properties, all of its children are affected.
   For example, if you set the alpha property on a display group,
@@ -225,6 +224,9 @@ function Cell:colorComplete()
   Groups automatically detect when a child's properties have changed
   (position, rotation, etc.). Thus, on the next render pass, the child will re-render.
 ]]
+
+--[[
+function Cell:colorComplete()
   self.color = self.grid.completeColor
   if self.grp then
     -- local dim = self.grid.dim
@@ -243,6 +245,7 @@ function Cell:colorComplete()
     end
   end
 end
+]]
 
 function Cell:rotate(dir)
 
@@ -250,10 +253,11 @@ function Cell:rotate(dir)
     self:createGraphics(1)
     if self.grid:isSectionComplete(self.section) then
       Util.sound('section')
+      self.grid:hideSection(self.section)
     end
     if self.grid:isComplete() then
       Util.sound('complete')
-      self.grid:colorComplete()
+      -- self.grid:colorComplete()
       _G.gameState:advanceLevel()
     end
   end
@@ -285,7 +289,13 @@ end
 
 function Cell:tap(event)
   -- trace('tap', event.numTaps, self.x, self.y, self.coins, self.bitCount)
-  self:rotate('clockwise')
+  if self.grid:isComplete() then
+    -- print('completed', event.name, event.numTaps, self.x, self.y, self.coins, self.bitCount)
+    self.grid:reset()
+    self.grid:newLevel()
+  else
+    self:rotate('clockwise')
+  end
   return true
 end
 
@@ -514,6 +524,10 @@ function Cell:fadeOut()
     for i=1, self.grp.numChildren do
       local o = self.grp[i]
       transition.scaleTo(o, {xScale=0.1, yScale=0.1, time=500})
+      physics.addBody(o, 'dynamic', { density=0.1, radius=10, bounce=0.9 } )
+      -- move slowly so not so many go off screen
+      o:setLinearVelocity( math.random( -10,10 ), math.random( -10,10 ) )
+      o.angularVelocity = math.random(0, 100)
     end
   end
 end

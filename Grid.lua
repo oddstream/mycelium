@@ -15,11 +15,12 @@ local Grid = {
 
   complete = nil,
 
-  newButton = nil,
+  levelText = nil,
 }
 Grid.__index = Grid
 
 function Grid.new(gridGroup, shapesGroup)
+trace('Grid.new')
   local o = {}
   setmetatable(o, Grid)
 
@@ -30,6 +31,7 @@ function Grid.new(gridGroup, shapesGroup)
 end
 
 function Grid:reset()
+  -- trace('Grid:reset')
 
   -- clear out gridGroup, shapeGroup objects
   while self.shapesGroup.numChildren > 0 do
@@ -55,6 +57,7 @@ function Grid:reset()
 end
 
 function Grid:newLevel()
+  -- trace('Grid:newLevel')
 
   -- assume gridGroup, shapeGroup are created but empty
 
@@ -84,14 +87,23 @@ function Grid:newLevel()
   self:placeCoins()
   self:colorCoins()
   self:jumbleCoins()
-  self:createGraphics(0)
+  self:createGraphics(0.1)
 
   self.complete = false
 
-  self:fadeIn()
+  -- create a new levelText for every level because Grid:reset() deletes all it's children
+  local fontSize = display.contentWidth / 7
+  self.levelText = display.newText({
+    parent = self.gridGroup,
+    text = tostring(_G.gameState.level),
+    x = display.contentCenterX,
+    y = display.contentHeight - fontSize,
+    font = native.systemFontBold,
+    fontSize = fontSize})
+  self.levelText:setFillColor(0,0,0)
+  self.levelText.alpha = 0.1
 
-  self.newButton:setLabel(string.format('(%s)', _G.gameState.level))
-  -- self.newButton:setFillColor(0.2,0.2,0.2)
+  self:fadeIn()
 
 end
 
@@ -156,25 +168,38 @@ function Grid:randomCell()
 end
 
 function Grid:createGraphics()
-  self:iterator(function(c) c:createGraphics(0) end)
+  self:iterator(function(c) c:createGraphics(0.1) end)
 end
 
 function Grid:placeCoins()
-  if math.random() < 0.5 then
-    self:iterator(function(c) c:placeCoin() end)
-  else
-    local yS = self.height
-    for yN = 1, self.height/2 do
-      for x = 1, self.width do
-        local cN = self:findCell(x,yN)
-        local cS = self:findCell(x,yS)
-        cN:placeCoin(cS)
-      end
-      yS = yS - 1
-    end
+
+  local function _countCoins()
+    local count = 0
+    self:iterator(function(c) count = count + c.bitCount end)
+    return count
   end
 
-  self:iterator(function(c) c:calcHammingWeight() end)
+  repeat
+
+    if math.random() < 0.5 then
+      self:iterator(function(c) c:placeCoin() end)
+    else
+      local yS = self.height
+      for yN = 1, self.height/2 do
+        for x = 1, self.width do
+          local cN = self:findCell(x,yN)
+          local cS = self:findCell(x,yS)
+          cN:placeCoin(cS)
+        end
+        yS = yS - 1
+      end
+    end
+
+    self:iterator(function(c) c:calcHammingWeight() end)
+    if _countCoins() == 0 then trace("WARNING: no coins") end
+
+  until _countCoins() > 0
+
 end
 
 function Grid:colorCoins()
@@ -194,7 +219,15 @@ function Grid:colorCoins()
 end
 
 function Grid:jumbleCoins()
-  self:iterator(function(c) c:jumbleCoin() end)
+  if system.getInfo('environment') == 'simulator' then
+    repeat
+      local totalMoves = 0
+      self:iterator(function(c) totalMoves = totalMoves + c:jumbleCoin() end)
+      if totalMoves == 0 then trace('WARNING: simulator repeating jumble') end
+    until totalMoves > 0
+  else
+    self:iterator(function(c) c:jumbleCoin() end)
+  end
 end
 
 function Grid:isComplete()
@@ -220,22 +253,26 @@ function Grid:isSectionComplete(section)
   return true
 end
 
+function Grid:hideSection(section)
+  local arr = table.filter(self.cells, function(c) return c.section == section end)
+  for _,c in ipairs(arr) do
+    c:fadeOut()
+  end
+end
+--[[
 function Grid:colorComplete()
   self:iterator( function(c)
     c:colorComplete()
+    c:fadeIn()
   end )
-  self.newButton:setLabel('(NEXT)') --'»')
-  self.newButton:setFillColor(unpack(self.completeColor))
 end
-
+]]
 function Grid:fadeIn()
   self:iterator( function(c) c:fadeIn() end )
-  transition.fadeIn(self.newButton, {time=1000})
 end
 
 function Grid:fadeOut()
   self:iterator( function(c) c:fadeOut() end )
-  transition.fadeOut(self.newButton, {time=1000})
 end
 
 function Grid:destroy()

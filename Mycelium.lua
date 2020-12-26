@@ -4,7 +4,7 @@ local Grid = require 'Grid'
 
 local physics = require 'physics'
 physics.start()
-physics.setGravity(0, 0.01)  -- 9.8
+physics.setGravity(0, 0)  -- 9.8
 trace('physics.engineVersion', physics.engineVersion)
 
 local composer = require('composer')
@@ -13,11 +13,10 @@ local scene = composer.newScene()
 local widget = require('widget')
 widget.setTheme('widget_theme_android_holo_dark')
 
-local sporesTable = {}
-
 local sporesGroup, gridGroup, shapesGroup
 
 local gameLoopTimer = nil
+local sporesTable = {}
 
 local grid = nil
 
@@ -52,32 +51,39 @@ end
 ]]
 
 local function createSpore(x, y, color)
-  local radius = math.random(6)
-  local newSpore = display.newCircle(sporesGroup, x, y, radius)
-  physics.addBody(newSpore, 'dynamic', { density=0.1, radius=radius, bounce=0.9 } )
-  if grid.complete then
-    newSpore:setLinearVelocity( math.random( -100,100 ), math.random( -100,100 ) )
+  local newSpore
+  local r= math.random()
+  if r < 0.333 then
+    newSpore = display.newCircle(sporesGroup, x, y, 4)
+    newSpore:setFillColor(unpack(color))
+    newSpore:setStrokeColor(unpack(color))
+    newSpore.strokeWidth = 2
+  elseif r < 0.666 then
+    newSpore = display.newCircle(sporesGroup, x, y, 2)
+    newSpore:setFillColor(unpack(color))
+    newSpore:setStrokeColor(unpack(color))
+    newSpore.strokeWidth = 1
   else
-    newSpore:setLinearVelocity( math.random( -20,20 ), math.random( -20,20 ) )
+    newSpore = display.newLine(sporesGroup, x, y, x + math.random(-10,10), y + math.random(-10,10))
+    newSpore.strokeWidth = 2
+    newSpore:setStrokeColor(unpack(color))
   end
-  newSpore.angularVelocity = 90
-  newSpore:setFillColor(unpack(color))
+  physics.addBody(newSpore, 'dynamic', { density=0.1, radius=10, bounce=0.9 } )
+  newSpore:setLinearVelocity( math.random( -50,50 ), math.random( -50,50 ) )
+  newSpore.angularVelocity = math.random(0, 100)
   table.insert(sporesTable, newSpore)
 end
 
 local function gameLoop()
 
-  if not grid.complete and math.random() < 0.9 then
-    return
-  end
-
+  -- each loop shape spawns a spore
   grid:iterator(function(c)
     if c.bitCount == 1 then
       createSpore(c.center.x, c.center.y, c.color)
     end
   end)
 
-  -- Remove spores which have drifted off screen
+  -- remove spores which have drifted off screen
   for i = #sporesTable, 1, -1 do
     local thisSpore = sporesTable[i]
 
@@ -106,31 +112,6 @@ function scene:create(event)
 
   grid = Grid.new(gridGroup, shapesGroup)
 
-  grid.newButton = widget.newButton({
-    id = 'new',
-    x = display.contentCenterX,
-    y = display.contentHeight - 60,
-    onRelease = function()
-      grid:fadeOut()
-      timer.performWithDelay(1000, function()
-        grid:reset()
-        grid:newLevel()
-      end, 1)
-    end,
-
-    label = '',
-    labelColor = { default={ 0.1, 0.1, 0.1 }, over={ 0.2, 0.2, 0.2 } },
-    font = 'assets/FredokaOne-Regular.ttf',  --native.systemFontBold,
-    fontSize = 80,
-    textOnly = true,
-
-    -- sheet = imageSheet,
-    -- defaultFrame = 1,
-    -- overFrame = 2,
-  })
-  -- grid.newButton:setFillColor(0.2,0.2,0.2)
-  sceneGroup:insert(grid.newButton)
-
   grid:newLevel()
 
 end
@@ -143,7 +124,10 @@ function scene:show(event)
     -- Code here runs when the scene is still off screen (but is about to come on screen)
   elseif phase == 'did' then
     -- Code here runs when the scene is entirely on screen
-    gameLoopTimer = timer.performWithDelay(1000, gameLoop, 0)
+
+    -- tweak the density of spores by changing the frequency of the game loop
+    -- 1000 is crowded, 5000 is sparse
+    gameLoopTimer = timer.performWithDelay(2000, gameLoop, 0)
   end
 end
 

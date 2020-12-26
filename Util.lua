@@ -66,7 +66,7 @@ function Util.sound(name)
   if system.getInfo('environment') == 'simulator' then
     -- trace('SOUND', name)
   else
-    -- trace('SOUND', name, type(_G.TWITTY_SOUNDS[name]))
+    -- trace('SOUND', name, type(_G.MYCELIUM_SOUNDS[name]))
     local handle
     if type(_G.MYCELIUM_SOUNDS[name]) == 'table' then
       handle = _G.MYCELIUM_SOUNDS[name][math.random(1, #_G.MYCELIUM_SOUNDS[name])]
@@ -158,12 +158,12 @@ function Util.chooseColors()
   }
 
   local colorsYellow = {
-    dec2Float(189, 183, 107),  -- DarkKhaki
-    dec2Float(240, 230, 140),  -- Khaki
-    dec2Float(255, 218, 185),  -- PeachPuff
-    dec2Float(255, 228, 181),  -- Moccasin
-    dec2Float(255, 239, 213),  -- PapayaWhip
-    dec2Float(255, 250, 205),  -- LemonChiffon
+    dec2Float(189,183,107),  -- DarkKhaki
+    dec2Float(240,230,140),  -- Khaki
+    dec2Float(255,218,185),  -- PeachPuff
+    dec2Float(255,228,181),  -- Moccasin
+    dec2Float(255,239,213),  -- PapayaWhip
+    dec2Float(255,250,205),  -- LemonChiffon
   }
 
   local colorsAll = {

@@ -24,7 +24,7 @@ function GameState:read()
   if file then
     local contents = file:read('*a')
     io.close(file)
-    print('state loaded from file', filePath, contents)
+    -- print('state loaded from file', filePath, contents)
     local state = json.decode(contents)
     if state and state.level then
       self.level = state.level
@@ -36,7 +36,7 @@ function GameState:write()
   local file = io.open(filePath, 'w')
   if file then
     file:write(json.encode(self))
-    print('state written to', filePath)
+    -- print('state written to', filePath)
     io.close(file )
   end
 end

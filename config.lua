@@ -16,9 +16,9 @@ application =
     height = 1920,
     -- width = 720,
     -- height = 1280,
-    scale = 'adaptive',  -- zoomEven, letterbox, adaptive
+    scale = 'letterbox',  -- zoomEven, letterbox, adaptive
     fps = 30,
-    shaderPrecision = "highp",
+    -- shaderPrecision = "highp",
     -- antialias = true,
   },
 }

@@ -1,0 +1,3 @@
+2020.12.26 Add physics when fading out completed sections
+2020.12.25 Completed sections now fade out (shrink) rather than staying on screen
+2020.12.25 Removed newButton, added levelText in bottom center to help fill space there (tried screen center, didn't like)

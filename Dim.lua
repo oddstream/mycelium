@@ -41,6 +41,7 @@ function Dim.new(Q)
   setmetatable(o, Dim)
 
   o.Q = Q
+  -- trace("Q ", Q)
 
   o.W = math.sqrt(3)*Q
   o.W75 = o.W*0.75

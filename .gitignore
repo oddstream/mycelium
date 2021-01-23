@@ -1,4 +1,5 @@
 desktop.ini
+*.keystore
 *.code-workspace
 *.wav
 *.mp3
